@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pass — component studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="studio.css">
+</head>
+<body>
+
+<div id="ground"><div id="plane"></div></div>
+
+<header id="bar">
+  <span class="brand">Pass studio</span>
+  <span class="bar-sep"></span>
+  <button class="btn ghost sm" id="add-card"><span class="lbl">Add card</span></button>
+  <button class="btn ghost sm" id="gen"><span class="lbl">Generate 10</span></button>
+  <button class="btn ghost sm" id="fit"><span class="lbl">Fit</span></button>
+  <span class="bar-sep"></span>
+  <span id="gen-tabs"></span>
+  <span class="bar-sep"></span>
+  <span id="model-state" class="badge" title="checking">…</span>
+  <span id="saved"></span>
+</header>
+
+<aside id="rail">
+  <div class="rail-h">
+    <h1>Inspector</h1>
+    <p>Parts are the app's controls lying on the canvas. Cards are frames carrying
+       a treatment. Drag a part onto a card.</p>
+  </div>
+  <div id="insp"></div>
+</aside>
+
+<section id="dock">
+  <button id="dock-t" class="dock-tab">
+    <span>Timeline</span>
+    <span class="dock-caret">⌃</span>
+  </button>
+  <div class="dock-body">
+    <div class="pv-wrap"><canvas id="preview"></canvas></div>
+    <div class="dock-main">
+      <div class="dock-h">
+        <span class="dock-k">Shots</span>
+        <span id="tl-count" class="dock-v">no shots</span>
+        <span id="tl-dur" class="dock-v dim"></span>
+        <span class="grow"></span>
+        <span id="tl-now" class="dock-v dim">0.00s</span>
+        <button class="btn default sm" id="tl-auto"><span class="lbl">Auto-fuse</span></button>
+        <button class="btn secondary sm" id="tl-fuse"><span class="lbl">Re-fuse</span></button>
+        <button class="btn secondary sm" id="tl-play"><span class="lbl">Play</span></button>
+        <button class="btn ghost sm" id="tl-clear"><span class="lbl">Clear</span></button>
+      </div>
+      <div id="strip"></div>
+      <input id="scrub" type="range" min="0" max="1" step="0.001" value="0">
+    </div>
+  </div>
+</section>
+
+<script type="module" src="src/app.js"></script>
+</body>
+</html>

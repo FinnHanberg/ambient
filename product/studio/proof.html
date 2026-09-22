@@ -1,0 +1,31 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>proof</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#8a8a8a;display:flex;gap:24px;padding:24px;font-family:Geist,sans-serif}
+canvas{display:block;box-shadow:0 8px 30px rgba(0,0,0,.35)}</style></head>
+<body><script type="module">
+/* Renders plates at their real export size. The law this checks: drawn
+   material is composed for the rectangle it is asked for. */
+import { plate, image } from './src/components.js';
+import { words } from './src/copy.js';
+import { formatOf } from './src/combine.js';
+const ims = ['../assets/pointing.png','../assets/review.png'].map(s => image(s, go));
+const SPECS = [
+  { comp:'panel',    layout:'titled',    format:'feed',   theme:'dark',  phase:1, scale:1, seed:.21, register:'product' },
+  { comp:'ringshot', layout:'captioned', format:'story',  theme:'light', phase:1, scale:1, seed:.44, register:'review' },
+  { comp:'hud',      layout:'stated',    format:'square', theme:'dark',  phase:.55, scale:1, seed:.67, register:'product' },
+];
+function go(){
+  document.body.innerHTML = '';
+  for(const s of SPECS){
+    const f = formatOf(s.format);
+    const cv = document.createElement('canvas');
+    cv.width = f.w; cv.height = f.h;
+    cv.style.width = Math.round(f.w/3.4) + 'px';
+    cv.style.height = Math.round(f.h/3.4) + 'px';
+    document.body.appendChild(cv);
+    plate(cv.getContext('2d'), f.w, f.h, s, words(s.seed, s.register), ims);
+  }
+}
+document.fonts.ready.then(() => setTimeout(go, 120));
+</script></body></html>

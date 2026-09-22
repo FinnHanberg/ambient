@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Upward causation — a copy suite from ten answers</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'sans-serif'] },
+      borderRadius: { lg: '10px', md: '8px', sm: '6px' },
+      colors: {
+        background: 'hsl(var(--background))', foreground: 'hsl(var(--foreground))',
+        muted: 'hsl(var(--muted))', 'muted-foreground': 'hsl(var(--muted-foreground))',
+        border: 'hsl(var(--border))', card: 'hsl(var(--card))',
+        accent: 'hsl(var(--accent))', 'accent-foreground': 'hsl(var(--accent-foreground))',
+      },
+    },
+  },
+}
+</script>
+<style>
+:root{
+  --background:0 0% 100%; --foreground:240 10% 4%;
+  --muted:240 5% 96%; --muted-foreground:240 4% 46%;
+  --border:240 6% 90%; --card:0 0% 100%;
+  --accent:211 100% 50%; --accent-foreground:0 0% 100%;
+}
+:root[data-theme="dark"]{
+  --background:240 10% 4%; --foreground:0 0% 98%;
+  --muted:240 4% 12%; --muted-foreground:240 5% 60%;
+  --border:240 4% 16%; --card:240 8% 7%;
+  --accent:211 100% 55%; --accent-foreground:0 0% 100%;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --background:240 10% 4%; --foreground:0 0% 98%;
+    --muted:240 4% 12%; --muted-foreground:240 5% 60%;
+    --border:240 4% 16%; --card:240 8% 7%;
+    --accent:211 100% 55%; --accent-foreground:0 0% 100%;
+  }
+}
+body{font-feature-settings:"cv11";}
+.tnum{font-variant-numeric:tabular-nums}
+.lit{box-shadow:0 0 0 1px hsl(var(--accent)) inset}
+.card{transition:box-shadow 200ms ease-out, background-color 200ms ease-out}
+.flash{background-color:hsl(var(--accent)/0.06)}
+</style>
+</head>
+<body class="bg-background text-foreground font-sans antialiased text-[15px]">
+
+<div class="mx-auto max-w-[1080px] px-6 sm:px-10">
+
+  <header class="py-16 border-b border-border">
+    <div class="flex items-start justify-between gap-6">
+      <p class="text-[12px] font-medium text-muted-foreground">Copy engine · upward causation</p>
+      <button id="theme" class="rounded-md border border-border px-3 py-1.5 text-[13px] font-medium
+        transition-colors duration-200 hover:bg-muted">Light</button>
+    </div>
+    <h1 class="mt-3 text-[36px] leading-[1.1] font-semibold tracking-[-0.02em] max-w-[24ch]">
+      Ten short answers. A whole comms suite above them.</h1>
+    <p class="mt-4 max-w-[62ch] text-muted-foreground">
+      Upward causation: the macro layer is nothing but the micro layer, arranged. You answer ten
+      questions in a few words each. Every subject line, ad, hero, SMS and sales beat above is
+      assembled from those answers and from nothing else — change one answer and the whole
+      surface moves.</p>
+  </header>
+
+  <!-- 01 ───────────────────────────────────────── -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">01</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">The causal stack</h2>
+    </div>
+    <div id="stack" class="rounded-lg border border-border bg-card divide-y divide-border"></div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      Each level is constrained by the one below it. No level may introduce a fact the level
+      below does not contain — the templates are connective tissue only.</p>
+  </section>
+
+  <!-- 02 ───────────────────────────────────────── -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">02</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">The ten inputs</h2>
+      <span id="inputcount" class="ml-auto text-[13px] text-muted-foreground tnum"></span>
+    </div>
+
+    <!-- prompt mode -->
+    <div id="prompt" class="rounded-lg border border-border bg-card p-8 sm:p-10">
+      <div class="flex items-center gap-3">
+        <span id="pstep" class="text-[12px] font-medium text-muted-foreground tnum">01 / 10</span>
+        <div class="h-1 flex-1 rounded-sm bg-muted overflow-hidden">
+          <div id="pbar" class="h-full bg-accent transition-[width] duration-200 ease-out" style="width:0%"></div>
+        </div>
+      </div>
+      <p id="pq" class="mt-6 text-[24px] leading-[1.25] font-semibold tracking-[-0.015em] max-w-[28ch]"></p>
+      <p id="phint" class="mt-2 text-[14px] text-muted-foreground max-w-[52ch]"></p>
+      <div class="mt-6 flex flex-wrap items-center gap-3">
+        <input id="pin" autocomplete="off" class="min-w-0 flex-1 basis-[320px] rounded-md border border-border bg-background
+          px-3.5 py-2.5 text-[15px] outline-none transition-colors duration-200 focus:border-accent">
+        <button id="pnext" class="rounded-md bg-accent px-4 py-2.5 text-[14px] font-medium text-accent-foreground
+          transition-opacity duration-200 hover:opacity-90">Next</button>
+      </div>
+      <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px]">
+        <button id="peg" class="text-muted-foreground underline underline-offset-2 transition-colors duration-200 hover:text-foreground"></button>
+        <span class="text-border">·</span>
+        <button id="pback" class="text-muted-foreground transition-colors duration-200 hover:text-foreground">Back</button>
+        <span class="text-border">·</span>
+        <button id="pall" class="text-muted-foreground transition-colors duration-200 hover:text-foreground">Fill the whole example set</button>
+      </div>
+    </div>
+
+    <!-- atom grid -->
+    <div id="atoms" class="hidden grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></div>
+    <p id="atomnote" class="hidden mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      Edit any field. Focus one to see which parts of the suite it causes.</p>
+  </section>
+
+  <!-- 03 ───────────────────────────────────────── -->
+  <section id="ctrlsec" class="hidden py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">03</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">Emergence</h2>
+    </div>
+    <div class="rounded-lg border border-border bg-card p-6 sm:p-8">
+      <div class="grid gap-8 sm:grid-cols-[1fr_auto] sm:items-end">
+        <div>
+          <p class="text-[12px] font-medium text-accent">Reachable from these ten answers</p>
+          <p class="mt-2 text-[30px] leading-[1.15] font-semibold tracking-[-0.02em]">
+            <span id="bigcount" class="tnum"></span> distinct suites</p>
+          <p id="bigsub" class="mt-2 text-[14px] text-muted-foreground max-w-[54ch]"></p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="flex items-center gap-2 rounded-md border border-border px-3 py-2">
+            <span class="text-[13px] text-muted-foreground">Seed</span>
+            <input id="seed" value="1" class="w-14 bg-transparent text-[14px] font-medium tnum outline-none">
+          </div>
+          <button id="reroll" class="rounded-md bg-accent px-4 py-2.5 text-[14px] font-medium text-accent-foreground
+            transition-opacity duration-200 hover:opacity-90">Draw again</button>
+          <button id="tracebtn" class="rounded-md border border-border px-4 py-2.5 text-[14px] font-medium
+            transition-colors duration-200 hover:bg-muted">Show provenance</button>
+          <button id="copyall" class="rounded-md border border-border px-4 py-2.5 text-[14px] font-medium
+            transition-colors duration-200 hover:bg-muted">Copy suite</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 ───────────────────────────────────────── -->
+  <section id="suitesec" class="hidden py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">04</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">The suite</h2>
+      <span id="suitecount" class="ml-auto text-[13px] text-muted-foreground tnum"></span>
+    </div>
+    <div id="suite" class="space-y-10"></div>
+  </section>
+
+  <!-- 05 ───────────────────────────────────────── -->
+  <section class="py-14">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">05</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">What this costs you</h2>
+    </div>
+    <div class="rounded-lg border border-border bg-card divide-y divide-border">
+      <div class="p-6">
+        <p class="text-[15px] font-medium">The ceiling is combinatorial, not semantic</p>
+        <p class="mt-2 text-[14px] text-muted-foreground max-w-[64ch]">Ten facts go in. However
+          many arrangements come out, the suite still knows ten facts. Volume is free here;
+          a new fact is not.</p></div>
+      <div class="p-6">
+        <p class="text-[15px] font-medium">A weak answer propagates everywhere</p>
+        <p class="mt-2 text-[14px] text-muted-foreground max-w-[64ch]">Upward causation has no
+          filter. A vague friction line or an indefensible number does not get diluted downstream
+          — it appears in every channel at once.</p></div>
+      <div class="p-6">
+        <p class="text-[15px] font-medium">Register comes from you, not the machine</p>
+        <p class="mt-2 text-[14px] text-muted-foreground max-w-[64ch]">The templates add joins and
+          order. Voice lives in how you phrased the ten answers, which is the one part that cannot
+          be generated.</p></div>
+      <div class="p-6">
+        <p class="text-[15px] font-medium">Drawing again is not editing</p>
+        <p class="mt-2 text-[14px] text-muted-foreground max-w-[64ch]">A new seed gives a different
+          arrangement, not a better one. The draw is a starting point for a pass by hand — the
+          provenance view exists so you can see what a line is made of before you keep it.</p></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ── atoms: the micro level ───────────────────────────────────────── */
+var ATOMS = [
+  {id:'who',       label:'Audience',  q:'Who is this for?',
+   hint:'Name them the way they would introduce themselves.', eg:'solo electricians who invoice from the van'},
+  {id:'moment',    label:'Moment',    q:'What were they doing ten minutes before they needed you?',
+   hint:'A scene, not a category.', eg:'photographing a finished consumer unit'},
+  {id:'friction',  label:'Friction',  q:'What goes wrong, exactly?',
+   hint:'The boring version. No adjectives.', eg:'the invoice gets written at 9pm from memory'},
+  {id:'artifact',  label:'Artifact',  q:'What do they end up holding?',
+   hint:'The output, in their hands.', eg:'a priced invoice with the site photos attached'},
+  {id:'number',    label:'Number',    q:'Name one number you can defend.',
+   hint:'Digits only.', eg:'40'},
+  {id:'unit',      label:'Unit',      q:'What is that number measuring?',
+   hint:'Two or three words.', eg:'minutes a job'},
+  {id:'proof',     label:'Proof',     q:'Why is that believable?',
+   hint:'One checkable fact.', eg:'the prices come from your own last twenty jobs'},
+  {id:'objection', label:'Objection', q:'What do they say when they hesitate?',
+   hint:'Their words, not yours.', eg:'my prices are not written down anywhere'},
+  {id:'name',      label:'Name',      q:'What is it called?',
+   hint:'Just the name.', eg:'Ledger'},
+  {id:'ask',       label:'Ask',       q:'What is the single next action?',
+   hint:'An imperative, two to four words.', eg:'Send one invoice'}
+];
+
+var state = { vals:{}, step:0, done:false, seed:1, trace:false, salt:{} };
+
+/* ── helpers ──────────────────────────────────────────────────────── */
+function cap(s){ s=(s||'').trim(); return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
+function low(s){ s=(s||'').trim(); return s ? s.charAt(0).toLowerCase()+s.slice(1) : s; }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function hash(s){ var h=2166136261,i; for(i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619);} return h>>>0; }
+function rngFor(s){ var a=hash(s); return function(){ a|=0; a=a+0x6D2B79F5|0; var t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function pick(rng,arr){ return arr[Math.floor(rng()*arr.length)]; }
+
+/* ── L1: primitives, each one a function of the atoms only ────────── */
+function pools(v){
+  var who=v.who, mom=v.moment, fr=v.friction, ar=v.artifact, n=v.number,
+      un=v.unit, pr=v.proof, ob=v.objection, nm=v.name, ak=v.ask;
+  return {
+    address:[
+      {t:'For '+low(who)+'.', a:['who']},
+      {t:cap(who)+'.', a:['who']},
+      {t:'Built for '+low(who)+'.', a:['who']},
+      {t:nm+' is for '+low(who)+'.', a:['name','who']}
+    ],
+    scene:[
+      {t:cap(mom)+'.', a:['moment']},
+      {t:'Ten minutes earlier: '+low(mom)+'.', a:['moment']},
+      {t:'It starts with '+low(mom)+'.', a:['moment']},
+      {t:'Picture it: '+low(mom)+'.', a:['moment']}
+    ],
+    friction:[
+      {t:cap(fr)+'.', a:['friction']},
+      {t:'Then '+low(fr)+'.', a:['friction']},
+      {t:'The part nobody mentions: '+low(fr)+'.', a:['friction']},
+      {t:'Every time, '+low(fr)+'.', a:['friction']},
+      {t:cap(fr)+' — that is the whole problem.', a:['friction']}
+    ],
+    flip:[
+      {t:'Until now, '+low(fr)+'.', a:['friction']},
+      {t:'The old way: '+low(fr)+'.', a:['friction']},
+      {t:'Not any more: '+low(fr)+'.', a:['friction']},
+      {t:'That was the old '+n+' '+low(un)+'.', a:['number','unit']}
+    ],
+    stake:[
+      {t:n+' '+low(un)+'.', a:['number','unit']},
+      {t:'That is '+n+' '+low(un)+'.', a:['number','unit']},
+      {t:n+' '+low(un)+', gone.', a:['number','unit']},
+      {t:'Costs you '+n+' '+low(un)+'.', a:['number','unit']},
+      {t:'Worth '+n+' '+low(un)+' to fix.', a:['number','unit']}
+    ],
+    claim:[
+      {t:'You get '+low(ar)+'.', a:['artifact']},
+      {t:cap(ar)+'.', a:['artifact']},
+      {t:'Instead: '+low(ar)+'.', a:['artifact']},
+      {t:'What you get is '+low(ar)+'.', a:['artifact']},
+      {t:nm+' gives you '+low(ar)+'.', a:['name','artifact']}
+    ],
+    proof:[
+      {t:cap(pr)+'.', a:['proof']},
+      {t:'It holds because '+low(pr)+'.', a:['proof']},
+      {t:'No trick: '+low(pr)+'.', a:['proof']},
+      {t:'Check it — '+low(pr)+'.', a:['proof']}
+    ],
+    doubt:[
+      {t:'“'+cap(ob)+'.”', a:['objection']},
+      {t:'You are thinking: '+low(ob)+'.', a:['objection']},
+      {t:'The usual objection: '+low(ob)+'.', a:['objection']},
+      {t:'Most people stop at '+low(ob)+'.', a:['objection']}
+    ],
+    ask:[
+      {t:cap(ak)+'.', a:['ask']},
+      {t:cap(ak)+' with '+nm+'.', a:['ask','name']},
+      {t:'Next: '+low(ak)+'.', a:['ask']},
+      {t:cap(ak)+' today.', a:['ask']}
+    ]
+  };
+}
+
+/* ── L2: operators, orderings of primitive kinds ──────────────────── */
+var OPS = [
+  {id:'ledger',   name:'Ledger',         seq:['stake','claim','ask']},
+  {id:'contrast', name:'Contrast',       seq:['friction','claim','ask']},
+  {id:'objection',name:'Objection-first',seq:['doubt','proof','ask']},
+  {id:'scene',    name:'Scene',          seq:['scene','friction','claim']},
+  {id:'proofled', name:'Proof-led',      seq:['proof','claim','ask']},
+  {id:'address',  name:'Address',        seq:['address','claim','ask']},
+  {id:'cost',     name:'Cost',           seq:['scene','stake','claim']},
+  {id:'flip',     name:'Flip',           seq:['flip','claim','ask']}
+];
+
+/* ── L3: forms, one grammar per surface ───────────────────────────── */
+var FORMS = [
+  {id:'subject',  family:'Email',  label:'Subject line',      take:1, cap:58,  ops:['ledger','contrast','flip','objection']},
+  {id:'preheader',family:'Email',  label:'Preheader',         take:1, cap:90,  ops:['proofled','scene','address']},
+  {id:'cold',     family:'Email',  label:'Cold email',        take:3, join:'\n\n', ops:['scene','objection','ledger','address']},
+  {id:'nurture',  family:'Email',  label:'Follow-up, day 3',  take:3, join:'\n\n', ops:['proofled','contrast','cost']},
+  {id:'adhead',   family:'Paid',   label:'Ad headline',       take:1, cap:40,  ops:['ledger','flip','contrast']},
+  {id:'adbody',   family:'Paid',   label:'Ad primary text',   take:2, cap:220, ops:['scene','cost','contrast','address']},
+  {id:'hero',     family:'Site',   label:'Hero section',      custom:'hero'},
+  {id:'proofsec', family:'Site',   label:'Proof section',     take:2, join:'\n\n', ops:['proofled','cost','contrast']},
+  {id:'faq',      family:'Site',   label:'FAQ entry',         custom:'faq'},
+  {id:'sms',      family:'Direct', label:'SMS',               take:2, cap:155, ops:['ledger','flip','address']},
+  {id:'push',     family:'Direct', label:'Push notification', take:1, cap:70,  ops:['ledger','flip','contrast']},
+  {id:'dm',       family:'Direct', label:'DM opener',         take:2, cap:240, ops:['scene','address','contrast']},
+  {id:'hook',     family:'Social', label:'Social hook',       take:1, cap:100, ops:['contrast','cost','flip','objection']},
+  {id:'bio',      family:'Social', label:'Profile line',      custom:'oneliner'},
+  {id:'beat',     family:'Sales',  label:'Sales page beat',   take:3, join:'\n\n', ops:['scene','cost','objection','ledger']},
+  {id:'close',    family:'Sales',  label:'Closing block',     take:3, join:'\n\n', ops:['objection','ledger','proofled']}
+];
+var FAMILIES = ['Email','Paid','Site','Direct','Social','Sales'];
+
+/* ── generation ───────────────────────────────────────────────────── */
+function draw(form, P, v){
+  var salt = state.salt[form.id] || 0;
+  var rng = rngFor(state.seed + '|' + form.id + '|' + salt);
+  if (form.custom === 'hero') {
+    var eyebrow = pick(rng, P.stake), head = pick(rng, P.claim),
+        sub = pick(rng, P.proof), cta = pick(rng, P.ask);
+    return {parts:[{k:'Eyebrow',t:eyebrow.t},{k:'Headline',t:head.t},{k:'Sub',t:sub.t},{k:'Button',t:v.ask}],
+            atoms:uniq(eyebrow.a.concat(head.a, sub.a, ['ask'])), op:'Ledger'};
+  }
+  if (form.custom === 'faq') {
+    var d = pick(rng, P.doubt), p = pick(rng, P.proof), c = pick(rng, P.claim);
+    return {parts:[{k:'Question',t:cap(v.objection)+'?'},{k:'Answer',t:p.t+' '+c.t}],
+            atoms:uniq(['objection'].concat(p.a, c.a)), op:'Objection-first'};
+  }
+  if (form.custom === 'oneliner') {
+    var c2 = pick(rng, P.claim);
+    return {text:v.name+' — '+low(v.artifact)+' for '+low(v.who)+'.',
+            atoms:['name','artifact','who'], op:'Address'};
+  }
+  var ops = OPS.filter(function(o){ return form.ops.indexOf(o.id) > -1; });
+  var best = null, i;
+  for (i = 0; i < 16; i++) {
+    var op = pick(rng, ops), seq = op.seq.slice(0, form.take);
+    var units = seq.map(function(k){ return pick(rng, P[k]); });
+    var text = units.map(function(u){ return u.t; }).join(form.join || ' ');
+    var cand = {text:text, atoms:uniq(units.reduce(function(m,u){ return m.concat(u.a); }, [])), op:op.name};
+    if (!form.cap || text.length <= form.cap) { best = cand; break; }
+    if (!best || text.length < best.text.length) best = cand;
+  }
+  return best;
+}
+function uniq(a){ var o=[],i; for(i=0;i<a.length;i++) if(o.indexOf(a[i])<0) o.push(a[i]); return o; }
+
+/* ── the combinatorial count, in logs ─────────────────────────────── */
+function suiteLog10(P){
+  var total = 0;
+  FORMS.forEach(function(f){
+    var n = 0;
+    if (f.custom === 'hero') n = P.stake.length*P.claim.length*P.proof.length*P.ask.length;
+    else if (f.custom === 'faq') n = P.doubt.length*P.proof.length*P.claim.length;
+    else if (f.custom === 'oneliner') n = 1;
+    else {
+      OPS.forEach(function(o){
+        if (f.ops.indexOf(o.id) < 0) return;
+        var p = 1;
+        o.seq.slice(0, f.take).forEach(function(k){ p *= P[k].length; });
+        n += p;
+      });
+    }
+    f._n = n;
+    total += Math.log10(n || 1);
+  });
+  return total;
+}
+
+/* ── render: the stack ────────────────────────────────────────────── */
+function renderStack(){
+  var filled = ATOMS.filter(function(a){ return (state.vals[a.id]||'').trim(); }).length;
+  var P = state.done ? pools(state.vals) : null;
+  var prims = P ? Object.keys(P).reduce(function(m,k){ return m + P[k].length; }, 0) : 0;
+  var kinds = P ? Object.keys(P).length : 9;
+  var L4 = P ? suiteLog10(P) : 0;
+  var rows = [
+    ['L0','Atoms','Short answers, typed by you.', filled + ' / 10'],
+    ['L1','Primitives','Sentence units derived from atoms only.', P ? (prims + ' across ' + kinds + ' kinds') : '—'],
+    ['L2','Operators','Orderings that turn primitives into an argument.', OPS.length],
+    ['L3','Forms','One grammar per surface, with its own limits.', FORMS.length],
+    ['L4','Suite','Every surface, drawn at once.', P ? ('10^' + Math.round(L4)) : '—']
+  ];
+  document.getElementById('stack').innerHTML = rows.slice().reverse().map(function(r, i){
+    var isTop = i === 0;
+    return '<div class="flex items-start gap-4 p-5 sm:p-6">'
+      + '<span class="w-6 shrink-0 text-[12px] font-medium tnum ' + (isTop ? 'text-accent' : 'text-muted-foreground') + '">' + r[0] + '</span>'
+      + '<div class="min-w-0 flex-1"><p class="text-[15px] font-medium">' + r[1] + '</p>'
+      + '<p class="mt-1 text-[13px] text-muted-foreground">' + r[2] + '</p></div>'
+      + '<span class="shrink-0 text-[14px] font-medium tnum ' + (isTop ? 'text-accent' : '') + '">' + r[3] + '</span>'
+      + '</div>';
+  }).join('');
+}
+
+/* ── render: the prompt flow ──────────────────────────────────────── */
+function renderPrompt(focus){
+  var a = ATOMS[state.step];
+  document.getElementById('pstep').textContent = String(state.step+1).padStart(2,'0') + ' / 10';
+  document.getElementById('pbar').style.width = (state.step/ATOMS.length*100) + '%';
+  document.getElementById('pq').textContent = a.q;
+  document.getElementById('phint').textContent = a.hint;
+  document.getElementById('peg').textContent = 'Use: ' + a.eg;
+  document.getElementById('pin').value = state.vals[a.id] || '';
+  document.getElementById('pin').placeholder = a.eg;
+  if (focus !== false) document.getElementById('pin').focus();
+  document.getElementById('inputcount').textContent =
+    ATOMS.filter(function(x){ return (state.vals[x.id]||'').trim(); }).length + ' answered';
+}
+function advance(){
+  var a = ATOMS[state.step];
+  var val = document.getElementById('pin').value.trim();
+  if (!val) { document.getElementById('pin').focus(); return; }
+  state.vals[a.id] = val;
+  if (state.step < ATOMS.length - 1) { state.step++; renderPrompt(); renderStack(); }
+  else finish();
+}
+function finish(){
+  state.done = true;
+  document.getElementById('prompt').classList.add('hidden');
+  document.getElementById('atoms').classList.remove('hidden');
+  document.getElementById('atoms').classList.add('grid');
+  document.getElementById('atomnote').classList.remove('hidden');
+  document.getElementById('ctrlsec').classList.remove('hidden');
+  document.getElementById('suitesec').classList.remove('hidden');
+  renderAtoms(); renderAll();
+}
+
+/* ── render: the atom grid ────────────────────────────────────────── */
+function renderAtoms(){
+  document.getElementById('atoms').innerHTML = ATOMS.map(function(a){
+    return '<label class="rounded-lg border border-border bg-card p-4 block">'
+      + '<span class="text-[12px] font-medium text-muted-foreground">' + a.label + '</span>'
+      + '<input data-atom="' + a.id + '" value="' + esc(state.vals[a.id]||'') + '" '
+      + 'class="mt-1.5 w-full bg-transparent text-[14px] outline-none placeholder:text-muted-foreground">'
+      + '</label>';
+  }).join('');
+  Array.prototype.forEach.call(document.querySelectorAll('[data-atom]'), function(el){
+    el.addEventListener('input', function(){
+      state.vals[el.getAttribute('data-atom')] = el.value;
+      renderAll();
+    });
+    el.addEventListener('focus', function(){ lightUp(el.getAttribute('data-atom')); });
+    el.addEventListener('blur', function(){ lightUp(null); });
+  });
+  document.getElementById('inputcount').textContent = '10 answered';
+}
+function lightUp(id){
+  Array.prototype.forEach.call(document.querySelectorAll('[data-uses]'), function(c){
+    var uses = c.getAttribute('data-uses').split(',');
+    c.classList.toggle('lit', !!id && uses.indexOf(id) > -1);
+  });
+}
+
+/* ── render: the suite ────────────────────────────────────────────── */
+var LAST = {};
+function renderAll(){
+  var v = state.vals, P = pools(v);
+  renderStack();
+  var L4 = suiteLog10(P);
+  document.getElementById('bigcount').textContent = '10^' + Math.round(L4);
+  document.getElementById('bigsub').textContent =
+    FORMS.length + ' surfaces, each drawn from ' + Object.keys(P).reduce(function(m,k){ return m+P[k].length; }, 0)
+    + ' primitives through ' + OPS.length + ' operators. One seed picks one of them.';
+  document.getElementById('suitecount').textContent = FORMS.length + ' surfaces';
+
+  var html = FAMILIES.map(function(fam){
+    var forms = FORMS.filter(function(f){ return f.family === fam; });
+    return '<div>'
+      + '<p class="text-[12px] font-medium text-muted-foreground mb-3">' + fam + '</p>'
+      + '<div class="grid gap-4 items-start sm:grid-cols-2">'
+      + forms.map(function(f){ return cardHTML(f, draw(f, P, v)); }).join('')
+      + '</div></div>';
+  }).join('');
+  document.getElementById('suite').innerHTML = html;
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-reroll]'), function(b){
+    b.addEventListener('click', function(){
+      var id = b.getAttribute('data-reroll');
+      state.salt[id] = (state.salt[id] || 0) + 1;
+      renderAll();
+      var c = document.querySelector('[data-form="' + id + '"]');
+      if (c) { c.classList.add('flash'); setTimeout(function(){ c.classList.remove('flash'); }, 220); }
+    });
+  });
+}
+
+function cardHTML(f, out){
+  var body, text;
+  if (out.parts) {
+    if (f.custom === 'hero') {
+      body = '<div class="rounded-md border border-border bg-muted/40 p-5">'
+        + '<p class="text-[12px] font-medium text-accent">' + esc(out.parts[0].t) + '</p>'
+        + '<p class="mt-2 text-[18px] leading-snug font-semibold tracking-[-0.01em]">' + esc(out.parts[1].t) + '</p>'
+        + '<p class="mt-2 text-[13px] text-muted-foreground">' + esc(out.parts[2].t) + '</p>'
+        + '<span class="mt-4 inline-block rounded-md bg-accent px-3.5 py-2 text-[13px] font-medium text-accent-foreground">'
+        + esc(cap(out.parts[3].t)) + '</span></div>';
+    } else {
+      body = out.parts.map(function(p){
+        return '<p class="' + (p.k === 'Question' ? 'text-[14px] font-medium' : 'mt-2 text-[14px] text-muted-foreground') + '">'
+          + esc(p.t) + '</p>';
+      }).join('');
+    }
+    text = out.parts.map(function(p){ return p.t; }).join(' ');
+  } else {
+    text = out.text;
+    body = '<p class="text-[14px] leading-relaxed whitespace-pre-line">' + esc(out.text) + '</p>';
+  }
+  var over = f.cap && text.length > f.cap;
+  return '<div data-form="' + f.id + '" data-uses="' + out.atoms.join(',') + '" '
+    + 'class="card rounded-lg border border-border bg-card p-5 flex flex-col">'
+    + '<div class="flex items-center gap-3 mb-3">'
+    +   '<p class="text-[13px] font-medium">' + f.label + '</p>'
+    +   (f.cap ? '<span class="text-[12px] tnum ' + (over ? 'text-accent' : 'text-muted-foreground') + '">'
+          + text.length + ' / ' + f.cap + '</span>' : '')
+    +   '<button data-reroll="' + f.id + '" class="ml-auto text-[12px] text-muted-foreground '
+    +     'transition-colors duration-200 hover:text-foreground">Draw again</button>'
+    + '</div>'
+    + body
+    + (state.trace
+        ? '<div class="mt-4 pt-3 border-t border-border flex flex-wrap items-center gap-1.5">'
+          + '<span class="text-[12px] text-muted-foreground">' + out.op + ' ←</span>'
+          + out.atoms.map(function(a){
+              var lab = (ATOMS.filter(function(x){ return x.id === a; })[0] || {}).label || a;
+              return '<span class="rounded-sm border border-border px-1.5 py-0.5 text-[12px] text-muted-foreground">'
+                + lab + '</span>'; }).join('')
+          + '</div>'
+        : '')
+    + '</div>';
+}
+
+/* ── wiring ───────────────────────────────────────────────────────── */
+document.getElementById('pnext').addEventListener('click', advance);
+document.getElementById('pin').addEventListener('keydown', function(e){ if (e.key === 'Enter') advance(); });
+document.getElementById('peg').addEventListener('click', function(){
+  document.getElementById('pin').value = ATOMS[state.step].eg;
+  document.getElementById('pin').focus();
+});
+document.getElementById('pback').addEventListener('click', function(){
+  if (state.step > 0) { state.step--; renderPrompt(); }
+});
+document.getElementById('pall').addEventListener('click', function(){
+  ATOMS.forEach(function(a){ state.vals[a.id] = a.eg; });
+  finish();
+});
+document.getElementById('reroll').addEventListener('click', function(){
+  state.seed = String(Number(state.seed) + 1);
+  document.getElementById('seed').value = state.seed;
+  state.salt = {};
+  renderAll();
+});
+document.getElementById('seed').addEventListener('input', function(e){
+  state.seed = e.target.value || '1'; state.salt = {}; renderAll();
+});
+document.getElementById('tracebtn').addEventListener('click', function(){
+  state.trace = !state.trace;
+  this.textContent = state.trace ? 'Hide provenance' : 'Show provenance';
+  renderAll();
+});
+document.getElementById('copyall').addEventListener('click', function(){
+  var v = state.vals, P = pools(v), btn = this;
+  var out = FAMILIES.map(function(fam){
+    return fam.toUpperCase() + '\n\n' + FORMS.filter(function(f){ return f.family === fam; }).map(function(f){
+      var d = draw(f, P, v);
+      var t = d.parts ? d.parts.map(function(p){ return p.k + ': ' + p.t; }).join('\n') : d.text;
+      return f.label + '\n' + t;
+    }).join('\n\n');
+  }).join('\n\n———\n\n');
+  navigator.clipboard.writeText(out).then(function(){
+    btn.textContent = 'Copied';
+    setTimeout(function(){ btn.textContent = 'Copy suite'; }, 1400);
+  });
+});
+
+/* ── theme ────────────────────────────────────────────────────────── */
+var root = document.documentElement, btn = document.getElementById('theme');
+var qs = new URLSearchParams(location.search).get('theme');
+if (qs) root.setAttribute('data-theme', qs);
+function label(){
+  var dark = root.getAttribute('data-theme') === 'dark' ||
+    (!root.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+  btn.textContent = dark ? 'Light' : 'Dark';
+}
+label();
+btn.addEventListener('click', function(){
+  var dark = root.getAttribute('data-theme') === 'dark' ||
+    (!root.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+  root.setAttribute('data-theme', dark ? 'light' : 'dark');
+  label();
+});
+
+renderStack();
+renderPrompt(false);
+if (new URLSearchParams(location.search).get('trace')) {
+  state.trace = true;
+  document.getElementById('tracebtn').textContent = 'Hide provenance';
+}
+if (new URLSearchParams(location.search).get('fill')) {
+  ATOMS.forEach(function(a){ state.vals[a.id] = a.eg; });
+  finish();
+}
+</script>
+</body>
+</html>

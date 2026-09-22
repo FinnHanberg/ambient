@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pass — comms variation sandbox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0A;--bg:#fff;--panel:#FAFAFA;--line:rgba(10,10,10,.09);--line2:rgba(10,10,10,.14);
+  --mute:rgba(10,10,10,.50);--faint:rgba(10,10,10,.32)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:Geist,-apple-system,sans-serif;font-size:15px;
+  line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:44px 26px 110px}
+.label{font-size:11.5px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;color:var(--faint)}
+h1{font-size:30px;font-weight:500;letter-spacing:-.025em;margin-top:10px}
+h2{font-size:21px;font-weight:500;letter-spacing:-.02em}
+.lede{color:var(--mute);margin-top:12px;max-width:66ch}
+section{margin-top:52px;padding-top:34px;border-top:1px solid var(--line)}
+section:first-of-type{border-top:0}
+
+.gate{display:grid;gap:12px;margin-top:22px}
+@media(min-width:820px){.gate{grid-template-columns:repeat(3,1fr)}}
+.g{border:1px solid var(--line);border-radius:12px;padding:18px;background:var(--bg)}
+.g h3{font-size:14px;font-weight:500}
+.g p{font-size:13.5px;color:var(--mute);margin-top:8px}
+.g .verdict{margin-top:12px;font-size:12px;padding:5px 10px;border-radius:999px;display:inline-block;
+  border:1px solid var(--line2);color:var(--mute)}
+.g .verdict.bad{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+.axes{display:grid;gap:10px;margin-top:22px}
+@media(min-width:820px){.axes{grid-template-columns:repeat(2,1fr)}}
+.ax{border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.ax b{font-size:13.5px;font-weight:500}
+.ax p{font-size:13px;color:var(--mute);margin-top:5px}
+
+/* variation blocks */
+.v{border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-top:16px}
+.v .vh{display:flex;align-items:baseline;gap:11px;padding:13px 18px;border-bottom:1px solid var(--line);
+  background:var(--panel)}
+.v .vh b{font-size:14px;font-weight:500}
+.v .vh .sp{flex:1}
+.v .vh .tag{font-size:11px;border:1px solid var(--line2);border-radius:999px;padding:3px 9px;color:var(--mute)}
+.v .vh .tag.a{background:var(--ink);color:#fff;border-color:var(--ink)}
+.v .cols{display:grid}
+@media(min-width:880px){.v .cols{grid-template-columns:1.25fr 1fr}}
+.v .stageish{padding:34px 26px;text-align:center;border-right:1px solid var(--line)}
+.v .badge{display:inline-block;border:1px solid var(--line2);border-radius:999px;padding:4px 11px;
+  font-size:11.5px;color:var(--mute)}
+.v h4{font-size:clamp(24px,3vw,33px);line-height:1.05;font-weight:500;letter-spacing:-.03em;
+  margin:14px auto 0;max-width:17ch}
+.v .sub{margin:12px auto 0;max-width:44ch;font-size:14.5px;color:var(--mute)}
+.v .btns{display:flex;gap:8px;justify-content:center;margin-top:18px}
+.v .b{background:var(--ink);color:#fff;border-radius:999px;padding:8px 17px;font-size:13px;font-weight:500}
+.v .b.o{background:transparent;color:var(--ink);border:1px solid var(--line2)}
+.v .micro{font-size:11.5px;color:var(--faint);margin-top:11px}
+.v .why{padding:22px 24px;display:flex;flex-direction:column;gap:14px}
+.v .why dt{font-size:11px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;color:var(--faint)}
+.v .why dd{font-size:13.5px;color:var(--mute);margin-top:4px}
+.v .why dd b{color:var(--ink);font-weight:500}
+
+.subj{border:1px solid var(--line);border-radius:12px;margin-top:20px;overflow:hidden}
+.subj .r{display:grid;gap:10px;padding:13px 18px;border-bottom:1px solid var(--line);align-items:baseline}
+@media(min-width:760px){.subj .r{grid-template-columns:1fr 150px}}
+.subj .r:last-child{border-bottom:0}
+.subj .r p{font-size:14px}
+.subj .r span{font-size:12px;color:var(--mute)}
+.subj .r.no p{color:var(--faint);text-decoration:line-through;text-decoration-thickness:1px}
+
+.test{border:1px solid var(--line2);border-radius:12px;padding:20px 22px;margin-top:22px;background:var(--panel)}
+.test ol{margin:12px 0 0 18px;display:flex;flex-direction:column;gap:9px}
+.test li{font-size:14px;color:var(--mute)}
+.test li b{color:var(--ink);font-weight:500}
+</style></head><body>
+<div class="wrap">
+
+<p class="label">Comms sandbox</p>
+<h1>Copy variations, and what each one bets on</h1>
+<p class="lede">Eight hero treatments for the same product. They are not eight ways of saying one
+  thing — each assumes something different about who is reading and what they already believe.
+  The reasoning matters more than the lines.</p>
+
+<section>
+  <p class="label">The gate</p>
+  <h2>Market → offer → copy, answered honestly</h2>
+  <p class="lede">Copy is the last variable and the weakest one. Before choosing a line, these three
+    have to be answered — and two of them currently can't be.</p>
+
+  <div class="gate">
+    <div class="g">
+      <h3>1 · Who is starving?</h3>
+      <p>Designers and design engineers who already brief coding agents daily, and who have
+        already paid for something to reduce that friction. We have no list, no buyers, and no
+        evidence anyone has paid to solve this.</p>
+      <p>What we do know: Aloud shipped this free. Someone else believed the hunger existed —
+        and priced it at zero.</p>
+      <span class="verdict bad">Invented</span>
+    </div>
+    <div class="g">
+      <h3>2 · What's the proposition?</h3>
+      <p>A free beta of a Mac app that turns a spoken review into an agent-ready brief. No price,
+        so no risk to reverse, and no revenue to learn from.</p>
+      <p>A free tool can't tell you whether the problem was worth money. It can only tell you
+        whether it was worth installing.</p>
+      <span class="verdict">Thin</span>
+    </div>
+    <div class="g">
+      <h3>3 · What's the proof?</h3>
+      <p>One real number exists: this page's own feedback round was captured with the tool in a
+        single pass, and the three notes it produced were specific enough to act on without a
+        follow-up question.</p>
+      <p>That's a demo, not a result. No time saved has been measured against a baseline.</p>
+      <span class="verdict">One anecdote</span>
+    </div>
+  </div>
+  <p class="lede" style="margin-top:18px">So: the correct output here is not a finished headline.
+    It's a set of bets, each of which names the reader it needs, so the right one can be chosen by
+    contact instead of taste.</p>
+</section>
+
+<section>
+  <p class="label">The axes</p>
+  <h2>What a hero line can lead with</h2>
+  <div class="axes">
+    <div class="ax"><b>Promise</b><p>What changes for you. Works on a reader who feels the pain but
+      hasn't seen a fix. Weakest when the category is crowded — every tool promises speed.</p></div>
+    <div class="ax"><b>Mechanism</b><p>How it works, as news. Works on a sophisticated reader who has
+      already discounted promises and now only believes a method.</p></div>
+    <div class="ax"><b>Enemy</b><p>Names the status quo you're replacing. Cheap recognition, and it
+      picks a fight you have to win in the next scroll.</p></div>
+    <div class="ax"><b>Identity</b><p>Who you become by using it. Highest ceiling, lowest floor —
+      lands hard on the right reader, reads as posturing to everyone else.</p></div>
+  </div>
+  <p class="lede" style="margin-top:16px">Your audience sits at stage 3–4 sophistication: they have
+    seen the promises and stopped believing them. That pushes the good money toward
+    <b>mechanism</b> and <b>enemy</b>, and away from promise.</p>
+</section>
+
+<section>
+  <p class="label">Variations</p>
+  <h2>Eight bets</h2>
+
+  <!-- 1 -->
+  <div class="v">
+    <div class="vh"><b>01 · Labour</b><span class="sp"></span><span class="tag">Promise</span><span class="tag">Current</span></div>
+    <div class="cols">
+      <div class="stageish">
+        <span class="badge">Works with Claude, Cursor &amp; Codex</span>
+        <h4>Point at it. Say what's wrong.</h4>
+        <p class="sub">Hold one chord and walk an interface out loud. Pass writes the brief, with the
+          pixels already attached.</p>
+        <div class="btns"><span class="b">Download for Mac</span><span class="b o">See a pass</span></div>
+        <p class="micro">Free while in beta · Runs entirely on device</p>
+      </div>
+      <dl class="why">
+        <div><dt>The bet</dt><dd>The felt pain is <b>transcription labour</b> — you already know what's
+          wrong, and writing it down is the tax.</dd></div>
+        <div><dt>Needs a reader who</dt><dd>Reviews interfaces often enough that the tax is visible to them.</dd></div>
+        <div><dt>Risk</dt><dd>"Say what's wrong" describes dictation. A reader who has tried voice tools
+          files this next to them and leaves.</dd></div>
+        <div><dt>Test</dt><dd>Does anyone ask how it knows what "it" is? If not, the mechanism never landed.</dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="v">
+    <div class="vh"><b>02 · The blind agent</b><span class="sp"></span><span class="tag a">Enemy</span><span class="tag">Strongest</span></div>
+    <div class="cols">
+      <div class="stageish">
+        <span class="badge">macOS · on device</span>
+        <h4>Your agent can't see what you're pointing at.</h4>
+        <p class="sub">So you type a paragraph describing which button you meant. Pass sends the
+          screenshot with a ring already on it.</p>
+        <div class="btns"><span class="b">Download for Mac</span><span class="b o">See a pass</span></div>
+        <p class="micro">Free while in beta</p>
+      </div>
+      <dl class="why">
+        <div><dt>The bet</dt><dd>The reader has <b>already lost an afternoon</b> to an agent editing the
+          wrong element. Naming that is instant recognition.</dd></div>
+        <div><dt>Needs a reader who</dt><dd>Uses coding agents on real UI work. Narrow, but that narrowness
+          is the point — it's the only group with demonstrated hunger.</dd></div>
+        <div><dt>Risk</dt><dd>Opens on a negative about a tool they like. And it dates: agents will get
+          screen access eventually.</dd></div>
+        <div><dt>Test</dt><dd>The cheapest to check — post the line alone and see if people reply with
+          their own version of the story.</dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="v">
+    <div class="vh"><b>03 · Mechanism as news</b><span class="sp"></span><span class="tag a">Mechanism</span></div>
+    <div class="cols">
+      <div class="stageish">
+        <span class="badge">New</span>
+        <h4>Now your screenshot knows which button you meant.</h4>
+        <p class="sub">Pass timestamps every word you say and matches it to where the cursor was at
+          that word. Say “move this above that” and two elements get marked.</p>
+        <div class="btns"><span class="b">Download for Mac</span><span class="b o">How it works</span></div>
+        <p class="micro">Free while in beta · Nothing leaves the Mac</p>
+      </div>
+      <dl class="why">
+        <div><dt>The bet</dt><dd>The <b>per-word binding is genuinely new</b>, and news beats promise for a
+          reader who stopped believing promises.</dd></div>
+        <div><dt>Needs a reader who</dt><dd>Is technical enough to find the method interesting on its own.</dd></div>
+        <div><dt>Risk</dt><dd>"Now" and "New" are worn. The sub-line carries the whole weight, which is
+          a lot to ask of the second line.</dd></div>
+        <div><dt>Test</dt><dd>Does the "move this above that" example get quoted back? That's the line
+          doing the work, not the headline.</dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="v">
+    <div class="vh"><b>04 · Volume</b><span class="sp"></span><span class="tag">Promise</span><span class="tag">Specific</span></div>
+    <div class="cols">
+      <div class="stageish">
+        <span class="badge">One hold</span>
+        <h4>23 notes. One take. No tickets.</h4>
+        <p class="sub">Walk the whole page talking. Every pause closes a note with its own screenshot.
+          You let go once, at the end.</p>
+        <div class="btns"><span class="b">Download for Mac</span><span class="b o">See a pass</span></div>
+        <p class="micro">Free while in beta</p>
+      </div>
+      <dl class="why">
+        <div><dt>The bet</dt><dd>An <b>odd, specific number</b> is more believable than an adjective, and
+          volume is the pain for anyone doing real review rounds.</dd></div>
+        <div><dt>Needs a reader who</dt><dd>Does long review passes, not one-off tweaks. Agency and team work.</dd></div>
+        <div><dt>Risk</dt><dd>23 is invented. Using a number we haven't measured is the exact dishonesty
+          this method exists to prevent — <b>measure a real pass before shipping this.</b></dd></div>
+        <div><dt>Test</dt><dd>Count notes across ten real passes. If the median isn't near 20, the line dies.</dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="v">
+    <div class="vh"><b>05 · The enemy, named</b><span class="sp"></span><span class="tag">Enemy</span></div>
+    <div class="cols">
+      <div class="stageish">
+        <span class="badge">For design reviews</span>
+        <h4>Stop writing down what you can already see.</h4>
+        <p class="sub">Screenshot, crop, then a sentence explaining which of four similar buttons you
+          meant. Say it instead.</p>
+        <div class="btns"><span class="b">Download for Mac</span><span class="b o">See a pass</span></div>
+        <p class="micro">Free while in beta</p>
+      </div>
+      <dl class="why">
+        <div><dt>The bet</dt><dd>The <b>ritual is the enemy</b>, and describing it in detail is more
+          persuasive than any claim about the fix.</dd></div>
+        <div><dt>Needs a reader who</dt><dd>Anyone who has cropped a screenshot this week. Widest reach here.</dd></div>
+        <div><dt>Risk</dt><dd>Says nothing about what's different. A markup tool could run this line
+          unchanged, which means it isn't yours.</dd></div>
+        <div><dt>Test</dt><dd>Show it to someone who uses Markup or BugHerd. If they say "I have that",
+          the line failed.</dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <!-- 6 -->
+  <div class="v">
+    <div class="vh"><b>06 · Identity</b><span class="sp"></span><span class="tag">Identity</span><span class="tag">High variance</span></div>
+    <div class="cols">
+      <div class="stageish">
+        <span class="badge">Built in a weekend, used every day</span>
+        <h4>The review is the easy part.</h4>
+        <p class="sub">Everything after it — the screenshots, the tickets, the explaining — is the part
+          that makes you stop reviewing. Pass takes that part.</p>
+        <div class="btns"><span class="b">Download for Mac</span><span class="b o">See a pass</span></div>
+        <p class="micro">Free while in beta</p>
+      </div>
+      <dl class="why">
+        <div><dt>The bet</dt><dd>Naming the <b>real reason people review less than they should</b> earns
+          more trust than naming a feature.</dd></div>
+        <div><dt>Needs a reader who</dt><dd>Has quietly given up on thorough review rounds and feels bad
+          about it. Very specific, very loyal if right.</dd></div>
+        <div><dt>Risk</dt><dd>Doesn't say what the product is. Needs the graphic to carry the entire
+          explanation, which only works because the hero is live.</dd></div>
+        <div><dt>Test</dt><dd>Time to comprehension. If someone can't say what it does in five seconds,
+          it's out.</dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <!-- 7 -->
+  <div class="v">
+    <div class="vh"><b>07 · Demonstration</b><span class="sp"></span><span class="tag">Show</span></div>
+    <div class="cols">
+      <div class="stageish">
+        <span class="badge"></span>
+        <h4>Watch.</h4>
+        <p class="sub">One word, then the graphic runs a full pass. Nothing else above the fold.</p>
+        <div class="btns"><span class="b">Download for Mac</span></div>
+        <p class="micro">Free while in beta</p>
+      </div>
+      <dl class="why">
+        <div><dt>The bet</dt><dd>The product is visual and the hero is already live, so <b>the artifact
+          outperforms any sentence about it.</b></dd></div>
+        <div><dt>Needs a reader who</dt><dd>Arrives with some context — a referral, a post, a demo video.
+          Fails cold.</dd></div>
+        <div><dt>Risk</dt><dd>No search surface, nothing to quote, nothing to forward. Great second
+          impression, bad first one.</dd></div>
+        <div><dt>Test</dt><dd>Only viable if referral traffic dominates. Check the source mix first.</dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <!-- 8 -->
+  <div class="v">
+    <div class="vh"><b>08 · The question</b><span class="sp"></span><span class="tag">Enemy</span><span class="tag">Self-recognition</span></div>
+    <div class="cols">
+      <div class="stageish">
+        <span class="badge">macOS · free beta</span>
+        <h4>How long does it take you to explain a spacing bug?</h4>
+        <p class="sub">Seeing it takes a second. Explaining it — which element, which side, how much —
+          takes a paragraph and a screenshot. Point at it instead.</p>
+        <div class="btns"><span class="b">Download for Mac</span><span class="b o">See a pass</span></div>
+        <p class="micro">Free while in beta</p>
+      </div>
+      <dl class="why">
+        <div><dt>The bet</dt><dd>A question the reader answers <b>against themselves</b> does the
+          persuading before any claim is made.</dd></div>
+        <div><dt>Needs a reader who</dt><dd>Has done this recently enough to wince.</dd></div>
+        <div><dt>Risk</dt><dd>Question headlines invite "not long, actually" and lose the reader in one beat.</dd></div>
+        <div><dt>Test</dt><dd>Strongest as an email subject or a post opener, weaker as a page headline.
+          Test it there first.</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="label">A-pile test</p>
+  <h2>Which of these survives as a line from a person</h2>
+  <p class="lede">A page headline and a subject line are not the same job. The test: would this look
+    like something a human typed to you, or like a campaign asset?</p>
+  <div class="subj">
+    <div class="r"><p>your agent can't see what you're pointing at</p><span>Passes — reads like a person</span></div>
+    <div class="r"><p>how long does it take you to explain a spacing bug?</p><span>Passes — a real question</span></div>
+    <div class="r"><p>the review is the easy part</p><span>Passes — sounds like an opinion</span></div>
+    <div class="r no"><p>Now Your Screenshot Knows Which Button You Meant</p><span>Campaign asset</span></div>
+    <div class="r no"><p>Point at it. Say what's wrong.</p><span>Reads as a tagline</span></div>
+    <div class="r no"><p>23 Notes. One Take. No Tickets.</p><span>Reads as an ad</span></div>
+  </div>
+</section>
+
+<section>
+  <p class="label">What to do</p>
+  <h2>The cheapest way to find out</h2>
+  <div class="test">
+    <p style="font-size:14px">Choosing between these by taste is the failure mode. Four moves, in order,
+      none of which need the product to be finished:</p>
+    <ol>
+      <li><b>Measure a real pass.</b> Count notes and elapsed time across ten reviews you'd do anyway.
+        That kills or confirms variation 04, and gives every other line a real number to use.</li>
+      <li><b>Post variation 02 alone</b> — no product, no link. If people reply with their own version
+        of the story, the enemy is real and the market exists.</li>
+      <li><b>Send 08 as a subject line</b> to twenty people who already brief agents. Opens tell you
+        about the market; replies tell you about the offer.</li>
+      <li><b>Only then write the page.</b> Whichever bet survives contact becomes the headline, and the
+        rest become the section heads further down.</li>
+    </ol>
+  </div>
+  <p class="lede" style="margin-top:18px">Note that none of this is a copy problem. The page is
+    currently running variation 01, which is the weakest bet on this list for a stage 3–4 reader — and
+    no amount of rewriting fixes a line that's aimed at a reader who isn't there.</p>
+</section>
+
+</div></body></html>

@@ -1,0 +1,22 @@
+<!doctype html><meta charset="utf-8"><title>timeline</title>
+<style>html,body{margin:0;height:100%}iframe{border:0;width:1400px;height:900px;display:block}</style>
+<iframe id="f" src="/studio/?tl=1"></iframe>
+<script type="module">
+const f = document.getElementById('f');
+f.onload = async () => {
+  const w = f.contentWindow, d = f.contentDocument;
+  await new Promise(r => setTimeout(r, 1600));
+  d.getElementById('tl-auto').click();          /* order the cards and fuse them */
+  await new Promise(r => setTimeout(r, 900));
+  d.getElementById('tl-play').click();          /* pause on a frame mid-move */
+  const S = w.__studio;
+  const plan = S.state.plan;
+  /* park the playhead inside a transition so the dissolve is visible */
+  const mv = plan.segments.find(s => s.kind === 'move');
+  w.dispatchEvent(new Event('x'));
+  const sc = d.getElementById('scrub');
+  sc.value = (mv.t0 + mv.dur*0.5) / plan.total;
+  sc.dispatchEvent(new Event('input', { bubbles:true }));
+  document.title = 'ready';
+};
+</script>

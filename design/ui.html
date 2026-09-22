@@ -1,0 +1,602 @@
+<title>Ambient Capture Layer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ink: #14161a;
+    --ink-2: #4a5059;
+    --ink-3: #868d97;
+    --rule: #dcdee2;
+    --ground: #f2f3f4;
+    --panel: #ffffff;
+    --live: #c8553d;
+
+    --stage: #0a0b0c;
+    --chrome: #101114;
+    --chrome-2: #1a1c20;
+    --chrome-line: rgba(255,255,255,.12);
+    --on-chrome: rgba(255,255,255,.96);
+    --on-chrome-2: rgba(255,255,255,.52);
+    --on-chrome-3: rgba(255,255,255,.28);
+
+    --display: "Archivo", system-ui, sans-serif;
+    --ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --ink: #eceef0;
+      --ink-2: #a2a8b0;
+      --ink-3: #6f767f;
+      --rule: #26292e;
+      --ground: #0d0e10;
+      --panel: #141619;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #eceef0;
+    --ink-2: #a2a8b0;
+    --ink-3: #6f767f;
+    --rule: #26292e;
+    --ground: #0d0e10;
+    --panel: #141619;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--ui);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 56px 28px 120px; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 18px;
+  }
+  h1 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(34px, 5.2vw, 52px);
+    line-height: 1.02;
+    letter-spacing: -.028em;
+    margin: 0 0 18px;
+    text-wrap: balance;
+  }
+  .lead { font-size: 17px; color: var(--ink-2); max-width: 62ch; margin: 0; }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 25px;
+    letter-spacing: -.018em;
+    margin: 0 0 6px;
+  }
+  h3 {
+    font-family: var(--display);
+    font-weight: 500;
+    font-size: 16px;
+    letter-spacing: -.008em;
+    margin: 0 0 4px;
+  }
+  p { margin: 0 0 14px; max-width: 64ch; }
+  .dim { color: var(--ink-2); }
+
+  section { margin-top: 76px; }
+  .head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 22px; }
+  .head .tag {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
+    color: var(--ink-3); border: 1px solid var(--rule);
+    padding: 2px 8px; border-radius: 999px;
+  }
+
+  /* ---------- the stage: a mac screen top edge ---------- */
+  .stage {
+    position: relative;
+    background: var(--stage);
+    border: 1px solid var(--chrome-line);
+    border-radius: 14px;
+    height: 330px;
+    overflow: hidden;
+    background-image:
+      linear-gradient(180deg, rgba(255,255,255,.05), transparent 30%),
+      repeating-linear-gradient(180deg, rgba(255,255,255,.022) 0 1px, transparent 1px 34px);
+  }
+  .menubar {
+    height: 26px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 12px;
+    font-size: 11px;
+    color: var(--on-chrome-3);
+    font-family: var(--ui);
+    border-bottom: 1px solid rgba(255,255,255,.05);
+  }
+  .menubar .left { display: flex; gap: 14px; }
+
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 150px; height: 26px;
+    background: #000;
+    border-radius: 0 0 11px 11px;
+    z-index: 3;
+  }
+
+  /* the island itself */
+  .island {
+    position: absolute; top: 0; left: 50%;
+    transform: translateX(-50%);
+    background: #000;
+    border: 1px solid rgba(255,255,255,.09);
+    border-top: none;
+    color: var(--on-chrome);
+    z-index: 4;
+    overflow: hidden;
+    width: 150px; height: 26px;
+    border-radius: 0 0 11px 11px;
+    transition: width .42s cubic-bezier(.32,.72,0,1),
+                height .42s cubic-bezier(.32,.72,0,1),
+                border-radius .42s cubic-bezier(.32,.72,0,1);
+    display: flex; align-items: flex-start; justify-content: center;
+  }
+  .island-inner {
+    width: 100%; height: 100%;
+    display: flex; align-items: center;
+    padding: 0 14px; gap: 11px;
+    opacity: 0; transition: opacity .2s ease .12s;
+  }
+  .island[data-state="idle"] .island-inner { opacity: 0; }
+  .island[data-state="armed"]  { width: 292px; height: 44px; border-radius: 0 0 20px 20px; }
+  .island[data-state="hearing"]{ width: 430px; height: 92px; border-radius: 0 0 24px 24px; }
+  .island[data-state="noted"]  { width: 398px; height: 62px; border-radius: 0 0 22px 22px; }
+  .island[data-state="review"] { width: 470px; height: 232px; border-radius: 0 0 26px 26px; }
+  .island[data-state="denied"] { width: 400px; height: 62px; border-radius: 0 0 22px 22px; }
+  .island:not([data-state="idle"]) .island-inner { opacity: 1; }
+
+  .wave { display: flex; align-items: center; gap: 2.5px; height: 18px; flex: none; }
+  .wave i {
+    width: 2.5px; border-radius: 2px; background: var(--on-chrome);
+    height: 4px; display: block;
+    animation: bob 1.05s ease-in-out infinite;
+  }
+  .wave i:nth-child(1){ animation-delay: 0s }
+  .wave i:nth-child(2){ animation-delay: .1s }
+  .wave i:nth-child(3){ animation-delay: .2s }
+  .wave i:nth-child(4){ animation-delay: .3s }
+  .wave i:nth-child(5){ animation-delay: .15s }
+  @keyframes bob { 0%,100% { height: 4px } 50% { height: 17px } }
+  @media (prefers-reduced-motion: reduce) {
+    .wave i { animation: none; height: 10px }
+    .island { transition: none }
+  }
+
+  .live-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--live); flex: none;
+  }
+  .mono-label {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--on-chrome-2); white-space: nowrap;
+  }
+  .said { font-size: 14px; color: var(--on-chrome); line-height: 1.35; }
+  .ctx {
+    font-family: var(--mono); font-size: 10px; color: var(--on-chrome-3);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .col { display: flex; flex-direction: column; gap: 5px; min-width: 0; flex: 1; }
+  .count {
+    font-family: var(--mono); font-size: 11px; color: var(--on-chrome-2);
+    border: 1px solid var(--chrome-line); border-radius: 999px;
+    padding: 2px 8px; flex: none;
+  }
+  .tick { font-size: 13px; color: var(--on-chrome-2); flex: none; }
+
+  /* review contents inside the island */
+  .rev { width: 100%; display: flex; flex-direction: column; gap: 0; }
+  .rev-head {
+    display: flex; align-items: baseline; gap: 10px;
+    padding: 12px 4px 10px; border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .rev-head b { font-size: 14px; font-weight: 600; }
+  .rev-row {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 9px 4px; border-bottom: 1px solid rgba(255,255,255,.05);
+  }
+  .rev-row .n { font-family: var(--mono); font-size: 10px; color: var(--on-chrome-3); width: 10px; flex:none; }
+  .thumb {
+    width: 52px; height: 34px; border-radius: 4px; flex: none;
+    border: 1px solid var(--chrome-line);
+    background:
+      radial-gradient(circle at 62% 46%, rgba(255,255,255,.9) 0 2px, transparent 3px),
+      linear-gradient(135deg, #2a2d33, #16181c);
+  }
+  .rev-foot { display: flex; gap: 8px; align-items: center; padding: 10px 4px 0; }
+  .btn {
+    font-size: 11px; padding: 4px 11px; border-radius: 999px;
+    border: 1px solid var(--chrome-line); color: var(--on-chrome-2);
+    background: rgba(255,255,255,.05);
+  }
+  .btn.key { background: rgba(255,255,255,.17); color: var(--on-chrome); }
+
+  /* ---------- controls ---------- */
+  .controls { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 16px; align-items: center; }
+  .chip {
+    font-family: var(--mono); font-size: 11px;
+    padding: 5px 11px; border-radius: 999px;
+    border: 1px solid var(--rule); background: transparent;
+    color: var(--ink-2); cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .chip:hover { border-color: var(--ink-3); color: var(--ink); }
+  .chip[aria-pressed="true"] { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+  .chip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .hint { font-family: var(--mono); font-size: 11px; color: var(--ink-3); margin-left: 4px; }
+
+  /* ---------- generic panels ---------- */
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 22px; }
+  .card { border: 1px solid var(--rule); border-radius: 10px; padding: 20px; background: var(--panel); }
+  .card .mini-stage {
+    background: var(--stage); border-radius: 7px; height: 128px; margin-bottom: 16px;
+    position: relative; overflow: hidden; border: 1px solid var(--chrome-line);
+  }
+
+  /* cursor-anchored pill */
+  .pill {
+    position: absolute; left: 34px; top: 52px;
+    display: flex; align-items: center; gap: 9px;
+    background: rgba(0,0,0,.93); border: 1px solid var(--chrome-line);
+    border-radius: 999px; padding: 6px 13px 6px 10px;
+  }
+  .ring {
+    position: absolute; left: 96px; top: 34px; width: 20px; height: 20px;
+    border: 2px solid rgba(255,255,255,.85); border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(0,0,0,.5);
+  }
+  /* bottom rail */
+  .rail {
+    position: absolute; left: 12px; right: 12px; bottom: 12px;
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(0,0,0,.93); border: 1px solid var(--chrome-line);
+    border-radius: 10px; padding: 9px 12px;
+  }
+
+  /* ---------- onboarding ---------- */
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 16px; }
+  .step { border: 1px solid var(--rule); border-radius: 10px; background: var(--panel); overflow: hidden; }
+  .step .screen {
+    background: var(--stage); height: 152px; padding: 18px;
+    display: flex; flex-direction: column; justify-content: center; gap: 10px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .step .screen .big { font-size: 15px; color: var(--on-chrome); font-weight: 500; line-height: 1.3; }
+  .step .screen .sub { font-size: 11.5px; color: var(--on-chrome-2); line-height: 1.45; }
+  .step .body { padding: 14px 16px 16px; }
+  .step .idx {
+    font-family: var(--mono); font-size: 10px; color: var(--ink-3);
+    letter-spacing: .1em; margin-bottom: 5px;
+  }
+  .step p { font-size: 13px; color: var(--ink-2); margin: 0; }
+  .kbd {
+    font-family: var(--mono); font-size: 11px;
+    border: 1px solid var(--chrome-line); border-radius: 4px;
+    padding: 2px 6px; color: var(--on-chrome);
+  }
+  .perm-row {
+    display: flex; align-items: center; gap: 9px;
+    font-size: 12px; color: var(--on-chrome-2);
+  }
+  .perm-row .state { margin-left: auto; font-family: var(--mono); font-size: 10px; }
+  .ok { color: rgba(255,255,255,.85); }
+
+  /* ---------- account ---------- */
+  .settings { border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; background: var(--panel); }
+  .srow {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 18px; border-bottom: 1px solid var(--rule);
+  }
+  .srow:last-child { border-bottom: none; }
+  .srow .label { font-size: 14px; }
+  .srow .sub { font-size: 12px; color: var(--ink-3); }
+  .srow .right { margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
+  .switch {
+    width: 38px; height: 22px; border-radius: 999px; background: var(--rule);
+    position: relative; flex: none;
+  }
+  .switch.on { background: var(--ink); }
+  .switch::after {
+    content: ""; position: absolute; top: 2px; left: 2px;
+    width: 18px; height: 18px; border-radius: 50%; background: var(--panel);
+    transition: transform .2s;
+  }
+  .switch.on::after { transform: translateX(16px); }
+
+  /* ---------- conventions ---------- */
+  .rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 2px; background: var(--rule); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+  .rule-cell { background: var(--panel); padding: 18px 20px; }
+  .rule-cell h3 { margin-bottom: 6px; }
+  .rule-cell p { font-size: 13px; color: var(--ink-2); margin: 0; }
+
+  footer { margin-top: 84px; padding-top: 22px; border-top: 1px solid var(--rule); color: var(--ink-3); font-size: 13px; }
+</style>
+
+<div class="wrap">
+
+  <p class="eyebrow">Ambient · macOS 26</p>
+  <h1>The capture layer</h1>
+  <p class="lead">Hold a chord, walk an interface, say what's wrong while pointing at it. The surface has one job: prove it heard you without ever interrupting the pass. Three directions, plus the flows around them.</p>
+
+  <!-- ===================== DIRECTION A ===================== -->
+  <section>
+    <div class="head">
+      <h2>Direction A — Notch island</h2>
+      <span class="tag">recommended</span>
+    </div>
+    <p class="dim">The capture surface grows out of the notch, so it never covers what you're pointing at and never competes with the cursor. Idle it is invisible. Every state is the same object at a different size — one continuous morph, no windows appearing and disappearing.</p>
+
+    <div class="stage">
+      <div class="menubar">
+        <span class="left"><span>Chrome</span><span>File</span><span>Edit</span><span>View</span></span>
+        <span>16:04</span>
+      </div>
+      <div class="notch"></div>
+      <div class="island" id="island" data-state="hearing">
+        <div class="island-inner" id="islandInner"></div>
+      </div>
+    </div>
+
+    <div class="controls" role="group" aria-label="Island states">
+      <button class="chip" data-s="idle">Idle</button>
+      <button class="chip" data-s="armed">Chord held</button>
+      <button class="chip" data-s="hearing" aria-pressed="true">Speaking</button>
+      <button class="chip" data-s="noted">Note landed</button>
+      <button class="chip" data-s="review">Pass ended</button>
+      <button class="chip" data-s="denied">No permission</button>
+      <span class="hint" id="hint">↑ click through the states</span>
+    </div>
+  </section>
+
+  <!-- ===================== ALTERNATIVES ===================== -->
+  <section>
+    <div class="head"><h2>Two alternatives</h2></div>
+    <div class="grid-2">
+
+      <div class="card">
+        <div class="mini-stage">
+          <div class="ring"></div>
+          <div class="pill">
+            <span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+            <span class="ctx" style="max-width:150px">link “Asset Supply©”</span>
+          </div>
+        </div>
+        <h3>B — Cursor-anchored pill</h3>
+        <p class="dim" style="font-size:13.5px">Follows the pointer, naming what it would bind to. Strongest feedback loop — you see the subject resolve before you commit the sentence. Costs: it sits over the thing you're inspecting, and a moving element in peripheral vision is tiring across a long pass.</p>
+      </div>
+
+      <div class="card">
+        <div class="mini-stage">
+          <div class="rail">
+            <span class="live-dot" aria-hidden="true"></span>
+            <span class="mono-label">Recording · 7</span>
+            <span class="ctx" style="margin-left:auto">asset-supply.com</span>
+          </div>
+        </div>
+        <h3>C — Bottom rail</h3>
+        <p class="dim" style="font-size:13.5px">A fixed strip, furthest from where design work happens. Calmest of the three and the easiest to ignore — which is also the risk: no proof of what a given note bound to. Best as the fallback on external displays with no notch.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================== ONBOARDING ===================== -->
+  <section>
+    <div class="head">
+      <h2>First run</h2>
+      <span class="tag">4 screens</span>
+    </div>
+    <p class="dim">Apple's convention is to ask for a permission at the moment its purpose is visible, never in a batch up front. Each screen does one thing and states what it gets you — the tool is usable after screen 3; screen 4 is optional.</p>
+
+    <div class="steps">
+
+      <div class="step">
+        <div class="screen">
+          <div class="big">Say what's wrong, while pointing at it.</div>
+          <div class="sub">Ambient records a pass across any app or page, and hands you a brief.</div>
+        </div>
+        <div class="body">
+          <div class="idx">01 · WHAT IT IS</div>
+          <p>One sentence and one demo loop. No account, no email, no tour.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="screen">
+          <div class="big">Hold <span class="kbd">⌃</span> <span class="kbd">fn</span> and say something.</div>
+          <div class="sub">Try it now — nothing is saved yet.</div>
+        </div>
+        <div class="body">
+          <div class="idx">02 · THE CHORD</div>
+          <p>Learned by doing it once. The microphone prompt appears here, because here is where it obviously matters.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="screen">
+          <div class="perm-row"><span>Microphone</span><span class="state ok">Allowed</span></div>
+          <div class="perm-row"><span>Accessibility</span><span class="state ok">Allowed</span></div>
+          <div class="perm-row"><span>Screen&nbsp;Recording</span><span class="state">Needed</span></div>
+          <div class="sub">Screen Recording lets a note show what you pointed at.</div>
+        </div>
+        <div class="body">
+          <div class="idx">03 · PERMISSIONS</div>
+          <p>Live state, not instructions. Each row says what it buys. Granting restarts the app silently, because macOS requires it.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="screen">
+          <div class="big">Where should passes go?</div>
+          <div class="perm-row"><span>Clipboard</span><span class="state ok">Default</span></div>
+          <div class="perm-row"><span>Claude</span><span class="state">Connect</span></div>
+          <div class="perm-row"><span>Linear</span><span class="state">Connect</span></div>
+        </div>
+        <div class="body">
+          <div class="idx">04 · DESTINATION</div>
+          <p>Skippable. Clipboard always works, so nothing is blocked on connecting anything.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================== ACCOUNT ===================== -->
+  <section>
+    <div class="head">
+      <h2>Settings &amp; account</h2>
+      <span class="tag">menu bar → Settings</span>
+    </div>
+    <p class="dim">One window, no sidebar, no tabs until there are enough rows to need them. Account sits at the bottom as a row like any other — it is not the point of the app.</p>
+
+    <div class="settings">
+      <div class="srow">
+        <div>
+          <div class="label">Chord</div>
+          <div class="sub">Hold to record a pass</div>
+        </div>
+        <div class="right">⌃ fn</div>
+      </div>
+      <div class="srow">
+        <div>
+          <div class="label">Clean up transcripts</div>
+          <div class="sub">Rewrites filler and “this” into a brief</div>
+        </div>
+        <div class="switch on" role="img" aria-label="On"></div>
+      </div>
+      <div class="srow">
+        <div>
+          <div class="label">Spoken replies</div>
+          <div class="sub">Off during a pass, always</div>
+        </div>
+        <div class="switch" role="img" aria-label="Off"></div>
+      </div>
+      <div class="srow">
+        <div>
+          <div class="label">Screenshots</div>
+          <div class="sub">Skipped while a password field is open</div>
+        </div>
+        <div class="right">Kept 30 days</div>
+      </div>
+      <div class="srow">
+        <div>
+          <div class="label">Finn Hanberg</div>
+          <div class="sub">Free — 3 enhanced passes left this month</div>
+        </div>
+        <div class="right">Upgrade</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CONVENTIONS ===================== -->
+  <section>
+    <div class="head"><h2>The conventions being followed</h2></div>
+    <div class="rules">
+      <div class="rule-cell">
+        <h3>One object, many sizes</h3>
+        <p>The island never appears or disappears — it grows and shrinks. Windows that pop in read as interruptions; a morph reads as the same thing paying attention.</p>
+      </div>
+      <div class="rule-cell">
+        <h3>Ask at the moment of purpose</h3>
+        <p>No permission is requested before the screen that shows why it exists. A batch of prompts on launch is the single most common way trust is lost.</p>
+      </div>
+      <div class="rule-cell">
+        <h3>Never block on an account</h3>
+        <p>Capture, clipboard and export work signed out, forever. The account row buys the rewrite, not the tool.</p>
+      </div>
+      <div class="rule-cell">
+        <h3>State, not instructions</h3>
+        <p>Permission rows show what is true now and change in place. Telling someone to visit System Settings is what a UI does when it cannot see its own state.</p>
+      </div>
+      <div class="rule-cell">
+        <h3>Silence is the default</h3>
+        <p>Nothing speaks during a pass. Confirmation is a shape change and a count — legible in peripheral vision, ignorable, and impossible to talk over.</p>
+      </div>
+      <div class="rule-cell">
+        <h3>The pass is uninterruptible</h3>
+        <p>No question, no confirmation, no error can appear while the chord is held. Anything that needs attention waits for the release.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Prototype for the Ambient capture layer · states are interactive, everything else is a still
+  </footer>
+</div>
+
+<script>
+  const island = document.getElementById('island');
+  const inner = document.getElementById('islandInner');
+  const hint = document.getElementById('hint');
+  const chips = [...document.querySelectorAll('.chip')];
+
+  const wave = '<span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>';
+
+  const views = {
+    idle: '',
+    armed: wave +
+      '<span class="mono-label">Listening</span>' +
+      '<span class="ctx" style="margin-left:auto">asset-supply.com</span>',
+    hearing: wave +
+      '<span class="col">' +
+        '<span class="said">the spacing under this heading is too tight</span>' +
+        '<span class="ctx">heading “The Art of Branding” · asset-supply.com</span>' +
+      '</span>' +
+      '<span class="count">4</span>',
+    noted: '<span class="tick">✓</span>' +
+      '<span class="col"><span class="said">Noted</span>' +
+      '<span class="ctx">the spacing under this heading is too tight</span></span>' +
+      '<span class="count">5</span>',
+    denied: '<span class="live-dot" aria-hidden="true"></span>' +
+      '<span class="col"><span class="said">Screen Recording is off</span>' +
+      '<span class="ctx">notes will record words, not what you pointed at</span></span>' +
+      '<span class="btn" style="flex:none">Turn on</span>',
+    review:
+      '<div class="rev">' +
+        '<div class="rev-head"><b>5 notes</b><span class="ctx">asset-supply.com</span>' +
+          '<span class="ctx" style="margin-left:auto">Clean</span></div>' +
+        '<div class="rev-row"><span class="n">1</span><span class="thumb"></span>' +
+          '<span class="col"><span class="said" style="font-size:12.5px">Increase the opacity of the link “Asset Supply©”</span>' +
+          '<span class="ctx">nav · asset-supply.com</span></span></div>' +
+        '<div class="rev-row"><span class="n">2</span><span class="thumb"></span>' +
+          '<span class="col"><span class="said" style="font-size:12.5px">The spacing around the button “Account” is off</span>' +
+          '<span class="ctx">button · asset-supply.com</span></span></div>' +
+        '<div class="rev-foot"><span class="btn key">Copy</span><span class="btn">Send to Claude</span>' +
+          '<span class="ctx" style="margin-left:auto">esc to close</span></div>' +
+      '</div>'
+  };
+
+  const labels = {
+    idle: 'invisible until the chord is held',
+    armed: 'chord down — armed, nothing said yet',
+    hearing: 'speaking — live transcript and the bound subject',
+    noted: 'note landed, count increments, back to listening',
+    review: 'chord released — the pass, before it goes anywhere',
+    denied: 'a problem waits for the release, then states itself'
+  };
+
+  function set(state) {
+    island.dataset.state = state;
+    inner.innerHTML = views[state];
+    hint.textContent = labels[state];
+    chips.forEach(c => c.setAttribute('aria-pressed', String(c.dataset.s === state)));
+  }
+
+  chips.forEach(c => c.addEventListener('click', () => set(c.dataset.s)));
+  set('hearing');
+</script>

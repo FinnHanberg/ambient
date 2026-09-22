@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Pass — launch staging</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Product Hunt's own chrome is cloned here so the staging is honest about how
+   the listing will actually read. Their orange is theirs; every Pass asset
+   inside the frame stays monochrome. */
+:root{--ph:#DA552F;--ink:#21293C;--grey:#4B587C;--line:#E5E7EB;--bg:#F7F7F7}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#fff;font-family:Geist,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;color:var(--ink)}
+.stage{max-width:1180px;margin:0 auto;padding:56px 32px 80px}
+.stage-label{font-size:12px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;
+  color:#9AA3B5;padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:28px}
+.stage-note{font-size:13px;color:#9AA3B5;margin-top:10px;max-width:70ch;line-height:1.5}
+img{display:block;max-width:100%}
+
+/* feed row */
+.feed{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.feed h4{font-size:15px;font-weight:600;padding:16px 20px;border-bottom:1px solid var(--line)}
+.row{display:flex;gap:16px;align-items:center;padding:18px 20px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row.us{background:#FFFBF9}
+.row img.ico{width:52px;height:52px;border-radius:12px}
+.row .body{flex:1;min-width:0}
+.row .name{font-size:15px;font-weight:600}
+.row .tag{font-size:14px;color:var(--grey);margin-top:2px}
+.chips{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.chip{font-size:11px;color:var(--grey);border:1px solid var(--line);border-radius:999px;padding:3px 9px}
+.vote{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  width:56px;height:56px;border:1px solid var(--line);border-radius:10px;flex:0 0 auto}
+.vote.on{border-color:var(--ph);color:var(--ph)}
+.vote .car{font-size:11px;line-height:1}
+.vote .num{font-size:14px;font-weight:600;margin-top:3px}
+
+/* product page */
+.ph{border:1px solid var(--line);border-radius:12px;padding:32px;margin-top:14px}
+.head{display:flex;gap:18px;align-items:flex-start}
+.head img{width:72px;height:72px;border-radius:16px}
+.head h1{font-size:26px;font-weight:600;letter-spacing:-.01em}
+.head p{font-size:16px;color:var(--grey);margin-top:4px}
+.btn{background:var(--ph);color:#fff;border-radius:8px;padding:11px 22px;font-size:14px;font-weight:600;
+  display:inline-block;text-decoration:none}
+.btn.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.actions{display:flex;gap:10px;margin-left:auto;flex:0 0 auto}
+.carousel{display:flex;gap:12px;margin-top:26px;overflow:hidden}
+.carousel img{width:460px;border-radius:8px;border:1px solid var(--line);flex:0 0 auto}
+.desc{margin-top:26px;font-size:15px;line-height:1.65;color:var(--grey);max-width:74ch}
+.desc b{color:var(--ink);font-weight:500}
+.topics{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
+.comment{margin-top:30px;border-top:1px solid var(--line);padding-top:24px;display:flex;gap:14px}
+.avatar{width:40px;height:40px;border-radius:999px;background:#21293C;color:#fff;font-size:15px;
+  font-weight:600;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.comment .who{font-size:14px;font-weight:600}
+.comment .who span{font-weight:400;color:#9AA3B5;margin-left:8px;font-size:13px}
+.comment p{font-size:15px;line-height:1.65;color:var(--grey);margin-top:8px;max-width:74ch}
+</style></head><body>
+
+<div class="stage">
+
+  <p class="stage-label">Staging · not published — how the launch reads in the feed</p>
+  <div class="feed">
+    <h4>Top Products Launching Today</h4>
+
+    <div class="row us">
+      <img class="ico" src="assets/icon-240.png">
+      <div class="body">
+        <div class="name">1. Pass</div>
+        <div class="tag">Talk through your UI. Get a brief your agent can act on.</div>
+        <div class="chips"><span class="chip">Design Tools</span><span class="chip">Developer Tools</span><span class="chip">Mac</span></div>
+      </div>
+      <div class="vote on"><div class="car">▲</div><div class="num">312</div></div>
+    </div>
+
+    <div class="row">
+      <img class="ico" src="assets/icon-240.png" style="filter:grayscale(1);opacity:.12">
+      <div class="body">
+        <div class="name">2. —</div>
+        <div class="tag">Competing launches sit here on the day.</div>
+      </div>
+      <div class="vote"><div class="car">▲</div><div class="num">207</div></div>
+    </div>
+  </div>
+  <p class="stage-note">The row is the whole pitch — an icon, six words and a topic chip.
+    If the tagline doesn't land here, the page below never gets read.</p>
+
+  <p class="stage-label" style="margin-top:56px">Staging · the product page</p>
+  <div class="ph">
+    <div class="head">
+      <img src="assets/icon-240.png">
+      <div>
+        <h1>Pass</h1>
+        <p>Talk through your UI. Get a brief your agent can act on.</p>
+      </div>
+      <div class="actions">
+        <a class="btn sec" href="#">Share</a>
+        <a class="btn" href="#">▲ Upvote 312</a>
+      </div>
+    </div>
+
+    <div class="carousel">
+      <img src="gallery/01.png"><img src="gallery/02.png"><img src="gallery/04.png">
+    </div>
+
+    <p class="desc">Hold one chord and walk an interface out loud. Pass captures each remark
+      with the page, the element, and a crop with a ring on what you pointed at — then hands
+      it to Claude, Cursor or Codex. On device. It never sends anything for you.</p>
+
+    <div class="topics"><span class="chip">Design Tools</span><span class="chip">Developer Tools</span>
+      <span class="chip">Artificial Intelligence</span><span class="chip">Mac</span></div>
+
+    <div class="comment">
+      <div class="avatar">FH</div>
+      <div>
+        <div class="who">Finn Hanberg <span>Maker · Hunter</span></div>
+        <p>I build interface systems, and most of my day is now spent telling a coding agent
+          what's wrong with a screen. The reviewing takes seconds. Writing it down takes ten
+          times longer — screenshot, crop, then a sentence explaining which of four similar
+          buttons I meant.</p>
+        <p>Pass samples the cursor continuously and timestamps every word, so when you say
+          "this" it knows what you were pointing at <b>at that word</b>. Say "move this above
+          that" and two different elements get marked.</p>
+        <p>A pass is one take — pauses close notes and it keeps listening. Let go and you get
+          a review panel. Copy it, or paste it into your agent and send it yourself. Nothing
+          leaves the Mac unless you do.</p>
+        <p>Free while it's in beta. I'd like to know where transcription falls down on accents
+          and jargon — that's the part I can't test alone.</p>
+      </div>
+    </div>
+  </div>
+  <p class="stage-note">Gallery order is deliberate: the finished output first, the ring
+    second, the per-word proof third. The input method is never the lead.</p>
+
+</div>
+</body></html>

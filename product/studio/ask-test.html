@@ -1,0 +1,46 @@
+<!doctype html><meta charset="utf-8"><title>ask test</title>
+<pre id="log" style="font:13px/1.7 ui-monospace,monospace;padding:18px"></pre>
+<iframe id="f" src="/studio/?ask=1" style="position:fixed;left:-4000px;width:1500px;height:950px;border:0"></iframe>
+<script type="module">
+const out = m => document.getElementById('log').append(m + "\n");
+const f = document.getElementById('f');
+f.onload = async () => {
+ try{
+  const w = f.contentWindow, d = f.contentDocument;
+  await new Promise(r => setTimeout(r, 1800));
+  const S = w.__studio;
+  const card = S.state.cards.find(c => c.comp);
+  out('card    : ' + card.id + ' "' + card.comp + '" layout ' + card.layout);
+
+  const click = name => {
+    const b = [...d.querySelectorAll('.ask-row .btn')].find(x => x.textContent.trim() === name);
+    if(!b) throw new Error('no button ' + name);
+    b.click();
+  };
+  const sel = id => { S.state.cards.forEach(c => c.el.classList.toggle('sel', c.id===id)); };
+
+  // select the card so the inspector renders Explore
+  d.querySelector(`[data-id="${card.id}"]`).dispatchEvent(new w.PointerEvent('pointerdown',{bubbles:true,button:0,pointerId:9}));
+  d.querySelector(`[data-id="${card.id}"]`).dispatchEvent(new w.PointerEvent('pointerup',{bubbles:true,button:0,pointerId:9}));
+  await new Promise(r => setTimeout(r, 300));
+  out('explore : ' + (d.querySelector('.ask-row') ? 'present' : 'MISSING'));
+
+  const before = S.state.cards.length;
+  click('Layout');  await new Promise(r => setTimeout(r, 500));
+  out('layout  : ' + (card.layoutSpec ? `applied "${card.layoutSpec.name}" subject y=${card.layoutSpec.subject.y}` : 'NOT APPLIED'));
+
+  click('Variations'); await new Promise(r => setTimeout(r, 700));
+  out('variants: ' + (S.state.cards.length - before) + ' new cards');
+
+  click('Animation'); await new Promise(r => setTimeout(r, 700));
+  const plan = S.state.plan;
+  out('shots   : ' + S.state.shots.length + '  total ' + (plan ? (plan.total/1000).toFixed(1) + 's' : '—'));
+  out('manners : ' + (plan ? plan.segments.filter(s=>s.kind==='move').map(s=>s.manner).join(' → ') : '—'));
+  out('state   : ' + d.querySelector('.ask-state')?.textContent.slice(0,80));
+
+  const ok = card.layoutSpec && S.state.cards.length > before && S.state.shots.length >= 3;
+  out(ok ? 'PASS — all three asks produced usable nodes with no model configured'
+         : 'FAIL');
+ } catch(e){ out('ERROR: ' + e.message); }
+};
+</script>

@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pass — point at it, say what's wrong</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0A0A0A;
+  --bg:#FFFFFF;
+  --panel:#FAFAFA;
+  --line:rgba(10,10,10,.09);
+  --line-2:rgba(10,10,10,.14);
+  --mute:rgba(10,10,10,.50);
+  --faint:rgba(10,10,10,.32);
+  --r:12px;
+  --pad:clamp(20px,4vw,40px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:Geist,-apple-system,BlinkMacSystemFont,sans-serif;font-size:15px;line-height:1.5}
+img{max-width:100%;display:block}
+a{color:inherit}
+
+.wrap{max-width:1100px;margin:0 auto;padding:0 var(--pad)}
+.label{font-size:12px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;color:var(--faint)}
+
+/* strip */
+.strip{background:var(--ink);color:#fff;font-size:12.5px}
+.strip .wrap{display:flex;align-items:center;justify-content:center;gap:10px;height:34px;flex-wrap:wrap}
+.strip .tag{background:#fff;color:var(--ink);font-size:10px;font-weight:600;letter-spacing:.05em;
+  border-radius:4px;padding:2px 6px}
+.strip span{color:rgba(255,255,255,.62)}
+.strip a{color:#fff;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.35);padding-bottom:1px}
+
+/* nav */
+nav{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.86);backdrop-filter:blur(14px) saturate(180%);
+  border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:26px;height:56px}
+.brand{display:flex;align-items:center;gap:9px;font-size:14.5px;font-weight:600;letter-spacing:-.01em}
+.brand i{width:18px;height:18px;border-radius:999px;border:2px solid var(--ink);display:block}
+nav a.nl{font-size:13.5px;color:var(--mute);text-decoration:none}
+nav a.nl:hover{color:var(--ink)}
+nav .sp{flex:1}
+.kbd{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--faint)}
+.kbd b{font-weight:500;border:1px solid var(--line-2);border-radius:5px;padding:2px 6px;color:var(--mute)}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:10px 20px;
+  font-size:13.5px;font-weight:500;text-decoration:none;border:1px solid transparent;transition:.18s ease}
+.btn.dark{background:var(--ink);color:#fff}
+.btn.dark:hover{opacity:.85}
+.btn.out{border-color:var(--line-2);color:var(--ink)}
+.btn.out:hover{background:var(--panel)}
+.btn.sm{padding:7px 14px;font-size:12.5px}
+
+/* hero */
+.hero{text-align:center;padding:clamp(56px,8vw,96px) 0 0}
+.badge{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line-2);border-radius:999px;
+  padding:5px 13px 5px 6px;font-size:12.5px;color:var(--mute)}
+.badge .dots{display:flex}
+.badge .dots i{width:19px;height:19px;border-radius:999px;background:var(--ink);border:2px solid #fff;margin-left:-7px}
+.badge .dots i:first-child{margin-left:0}
+h1{font-size:clamp(38px,6.6vw,74px);line-height:1.02;font-weight:500;letter-spacing:-.035em;
+  max-width:15ch;margin:22px auto 0}
+.sub{margin:20px auto 0;max-width:50ch;font-size:clamp(15px,1.5vw,17.5px);color:var(--mute)}
+.sub em{font-style:normal;color:var(--faint);display:block}
+.cta{display:flex;gap:10px;justify-content:center;margin-top:28px;flex-wrap:wrap}
+.micro{margin-top:16px;font-size:12.5px;color:var(--faint)}
+
+/* frame card */
+.frame{margin-top:clamp(44px,6.5vw,76px)}
+
+/* sections */
+section{padding:clamp(56px,9vw,104px) 0}
+.head{max-width:56ch}
+h2{font-size:clamp(25px,3.4vw,38px);line-height:1.08;font-weight:500;letter-spacing:-.028em;margin-top:12px}
+.head p{margin-top:14px;color:var(--mute);font-size:16px}
+
+/* bento */
+.bento{display:grid;gap:12px;margin-top:clamp(28px,4vw,44px)}
+@media(min-width:880px){
+  .bento{grid-template-columns:repeat(6,1fr)}
+  .c-4{grid-column:span 4}.c-2{grid-column:span 2}.c-3{grid-column:span 3}.c-6{grid-column:span 6}
+}
+.card{border:1px solid var(--line);border-radius:var(--r);padding:20px;background:var(--bg);display:flex;
+  flex-direction:column;gap:14px;min-width:0}
+.card.fill{background:var(--panel)}
+.card h3{font-size:15px;font-weight:500;letter-spacing:-.01em}
+.card p{font-size:13.5px;color:var(--mute)}
+
+/* pipeline */
+.steps{display:flex;flex-direction:column;gap:0;flex:1;justify-content:center}
+.step{display:flex;gap:13px;align-items:flex-start;padding:11px 0}
+.step + .step{border-top:1px solid var(--line)}
+.step .n{width:22px;height:22px;flex:0 0 auto;border:1px solid var(--line-2);border-radius:6px;
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--mute)}
+.step b{display:block;font-size:13.5px;font-weight:500}
+.step span{font-size:13px;color:var(--mute)}
+
+/* copy field */
+.field{border:1px solid var(--line);border-radius:9px;background:var(--panel);overflow:hidden}
+.field .bar{display:flex;align-items:center;gap:8px;padding:8px 11px;border-bottom:1px solid var(--line)}
+.field .bar b{font-size:11.5px;font-weight:500;color:var(--mute)}
+.field .bar .sp{flex:1}
+.field pre{padding:13px;font-family:Geist,sans-serif;font-size:12.5px;line-height:1.62;color:var(--mute);
+  white-space:pre-wrap;max-height:210px;overflow:hidden}
+.field pre b{color:var(--ink);font-weight:500}
+
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.tile{border:1px solid var(--line);border-radius:9px;padding:11px 12px;font-size:13px;display:flex;
+  align-items:center;gap:9px;color:var(--mute)}
+.tile i{width:7px;height:7px;border-radius:999px;background:var(--ink);opacity:.75;flex:0 0 auto}
+
+/* kv */
+.kv{display:flex;flex-direction:column}
+.kvr{display:grid;grid-template-columns:132px 1fr;gap:14px;padding:11px 0;align-items:baseline}
+.kvr + .kvr{border-top:1px solid var(--line)}
+.kvr dt{font-size:11.5px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;color:var(--faint)}
+.kvr dd{font-size:13.5px;color:var(--mute)}
+
+/* ring figure */
+.ring{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel)}
+.ring img{width:100%;height:clamp(240px,26vw,330px);object-fit:cover;object-position:50% 20%}
+.ring figcaption{padding:11px 13px;font-size:13px;color:var(--mute);border-top:1px solid var(--line)}
+.ring figcaption b{color:var(--ink);font-weight:500}
+
+/* end */
+.end{text-align:center;border-top:1px solid var(--line)}
+.end h2{margin:0 auto;max-width:19ch}
+footer{border-top:1px solid var(--line);padding:26px 0}
+footer .wrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+footer a{font-size:13px;color:var(--mute);text-decoration:none}
+footer .sp{flex:1}
+
+/* ── live hero ─────────────────────────────────────────────
+   The product is an interface, so the hero is the interface
+   running — not a photograph of it. */
+.stage{position:relative;width:100%;max-width:820px;margin:0 auto;aspect-ratio:16/9.4;
+  border-radius:12px;overflow:hidden;background:#fff;border:1px solid var(--line)}
+.mock{position:absolute;inset:0;display:flex;flex-direction:column}
+/* Skeleton, not a brand. The page under review is neutral geometry so the
+   instrument is unambiguously the subject. */
+.mock .nav{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--line)}
+.mock .logo{width:20px;height:20px;border-radius:999px;background:rgba(10,10,10,.13);flex:0 0 auto}
+.mock .sk{height:8px;border-radius:999px;background:rgba(10,10,10,.09)}
+.mock .nav .sp{flex:1}
+.mock .doc{padding:34px 20px 0;text-align:center;display:flex;flex-direction:column;align-items:center;gap:11px}
+.mock .bar{height:14px;border-radius:999px;background:rgba(10,10,10,.14);width:54%}
+.mock .bar.s{height:9px;background:rgba(10,10,10,.07);width:36%}
+.mock .btns{display:flex;gap:9px;justify-content:center;margin-top:9px}
+.mock .b{height:26px;width:86px;border-radius:999px;background:rgba(10,10,10,.13)}
+.mock .b.o{background:transparent;border:1px solid rgba(10,10,10,.10);width:100px}
+
+.hring{position:absolute;width:42px;height:42px;border-radius:999px;border:2px solid var(--ink);
+  transform:translate(-50%,-50%) scale(.45);opacity:0;z-index:3;box-shadow:0 0 0 3px rgba(255,255,255,.92)}
+.hring.on{opacity:1;transform:translate(-50%,-50%) scale(1);
+  transition:opacity .16s ease,transform .34s cubic-bezier(.16,1,.3,1)}
+
+/* the dark instrument — listening, then the finished pass */
+.inst{position:absolute;left:4.5%;right:4.5%;bottom:4.5%;background:#0E0E0E;border-radius:14px;z-index:4;
+  overflow:hidden;height:126px;box-shadow:0 16px 44px rgba(0,0,0,.20);
+  transition:height .5s cubic-bezier(.16,1,.3,1),box-shadow .5s ease}
+.inst.open{height:min(252px,80%);box-shadow:0 20px 56px rgba(0,0,0,.30)}
+.hud{padding:16px 19px;display:flex;flex-direction:column;gap:11px;transition:opacity .3s ease}
+.hud .top{display:flex;align-items:center;gap:11px}
+.wv{display:flex;align-items:center;gap:3px;height:18px}
+.wv i{width:2.5px;border-radius:2px;background:rgba(255,255,255,.82);height:3px}
+.hud .st{font-size:10.5px;font-weight:500;letter-spacing:.09em;color:rgba(255,255,255,.45)}
+.hud .ln{color:#fff;font-size:16px;min-height:22px;line-height:1.35;text-align:left}
+.hud .cp{align-self:flex-start;display:flex;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.14);
+  border-radius:999px;padding:4px 10px;font-size:11px;color:rgba(255,255,255,.55)}
+.hud .cp i{width:6px;height:6px;border-radius:999px;border:1px solid rgba(255,255,255,.45)}
+
+.done{position:absolute;inset:0;opacity:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;
+  transition:opacity .34s ease}
+.inst.open .hud{opacity:0}
+.inst.open .done{opacity:1}
+.done .dh{display:flex;align-items:baseline;gap:9px;padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.1)}
+.done .dh b{color:#fff;font-size:13px;font-weight:600}
+.done .dh span{color:rgba(255,255,255,.4);font-size:11px}
+.done .dr{flex:0 0 auto;overflow:hidden;min-height:0}
+.nr{display:flex;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.07);text-align:left}
+.nr .i{color:rgba(255,255,255,.34);font-size:10.5px;width:9px;flex:0 0 auto;padding-top:2px}
+.nr .th{width:52px;height:33px;border-radius:4px;background:rgba(255,255,255,.9);flex:0 0 auto}
+.nr b{display:block;color:rgba(255,255,255,.95);font-size:11.5px;font-weight:400;line-height:1.35}
+.nr span{display:block;color:rgba(255,255,255,.34);font-size:10px;margin-top:3px}
+.done .df{display:flex;gap:7px;padding:10px 14px;border-top:1px solid rgba(255,255,255,.1)}
+.done .df span{font-size:11px;border-radius:999px;padding:5px 12px;background:rgba(255,255,255,.14);color:#fff}
+.done .df span.g{background:transparent;border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.6)}
+
+/* Reduced motion: show the finished pass, still. The ring stays hidden —
+   it is never positioned in this path, so forcing it visible would park it
+   in the corner. */
+@media(prefers-reduced-motion:reduce){
+  .inst .hud{display:none}
+  .inst .done{position:relative;opacity:1}
+  .hring{display:none}
+}
+
+/* narrow: the nav keeps the mark and the one action; links live in the page */
+@media(max-width:820px){
+  nav a.nl,.kbd{display:none}
+  nav .wrap{gap:14px}
+  .strip .wrap{height:auto;padding:7px 0;line-height:1.4}
+  .tiles{grid-template-columns:1fr}
+  .kvr{grid-template-columns:1fr;gap:2px}
+  .field pre{font-size:12px}
+}
+
+
+/* proportional bars — ink is the pass, ghost ink is the old way */
+.meter{display:flex;flex-direction:column;gap:11px}
+.meter .r{display:flex;align-items:center;gap:11px}
+.meter .r>b{font-size:12.5px;font-weight:500;width:56px;flex:0 0 auto}
+.meter .t{flex:1;height:9px;border-radius:999px;background:rgba(10,10,10,.05);position:relative;overflow:hidden}
+.meter .t i{position:absolute;top:0;bottom:0;left:0;border-radius:999px;background:rgba(10,10,10,.15)}
+.meter .t i.k{background:var(--ink)}
+.meter .v{font-size:12px;color:var(--faint);width:54px;text-align:right;flex:0 0 auto}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--mute)}
+.legend span{display:flex;align-items:center;gap:7px}
+.legend i{width:9px;height:9px;border-radius:3px;background:rgba(10,10,10,.15)}
+.legend i.k{background:var(--ink)}
+.num{font-variant-numeric:tabular-nums}
+
+/* rate field */
+.rate{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rate .box{display:flex;align-items:center;border:1px solid var(--line-2);border-radius:9px;padding:8px 11px}
+.rate .box s{text-decoration:none;color:var(--faint);margin-right:3px}
+.rate input{width:58px;border:0;background:transparent;font-family:inherit;font-size:16px;
+  font-weight:500;color:var(--ink);outline:none;font-variant-numeric:tabular-nums}
+.rate em{font-style:normal;font-size:13.5px;color:var(--mute)}
+
+/* the dock — hidden until the hero is behind you */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:45;transform:translateY(130%);
+  transition:transform .24s cubic-bezier(.2,.7,.2,1);pointer-events:none}
+.dock.up{transform:none;pointer-events:auto}
+.dock .in{max-width:1100px;margin:0 auto 14px;padding:13px 16px;display:flex;align-items:center;
+  gap:14px;flex-wrap:wrap;background:rgba(255,255,255,.92);backdrop-filter:blur(14px) saturate(180%);
+  border:1px solid var(--line-2);border-radius:var(--r);box-shadow:0 10px 34px rgba(0,0,0,.09)}
+.dock p{font-size:13.5px;flex:1;min-width:210px;color:var(--mute)}
+.dock p b{color:var(--ink);font-weight:500}
+@media(max-width:820px){.dock .in{margin:0 12px 12px}}
+
+
+/* ── phone ──────────────────────────────────────────────────
+   The stage goes portrait so the page under review stays visible
+   behind the instrument. The ring landing on that page is the whole
+   argument of the hero; at 64% coverage it was landing off-screen. */
+@media(max-width:560px){
+  .stage{aspect-ratio:4/4.3}
+  .inst{height:112px}
+  .inst.open{height:min(238px,70%)}
+  .hud{padding:14px 15px;gap:9px}
+  .hud .ln{font-size:15px}
+  .nr{padding:8px 12px;gap:9px}
+  .nr .th{width:44px;height:28px}
+  .nr b{font-size:11px}
+  .nr span{font-size:9.5px}
+  .done .dh{padding:9px 12px}
+  .done .df{padding:9px 12px}
+
+  h1{line-height:1.06}
+  .cta{flex-direction:column;align-items:stretch}
+  .cta .btn{justify-content:center}
+  .meter .r>b{width:44px;font-size:12px}
+  .meter .v{width:48px;font-size:11.5px}
+  /* the dock is fixed; keep it from permanently covering the footer */
+  footer{padding-bottom:84px}
+}
+
+/* motion — nothing hidden in CSS */
+.rise{opacity:1;transform:none}
+.rise.armed{opacity:0;transform:translateY(12px)}
+.rise.in{opacity:1;transform:none;transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .6s cubic-bezier(.2,.7,.2,1)}
+@media(prefers-reduced-motion:reduce){.rise,.rise.armed{opacity:1!important;transform:none!important;transition:none}}
+</style>
+</head>
+<body>
+
+<div class="strip"><div class="wrap">
+  <span class="tag">BETA</span> Pass 0.9 is open. <a href="#get">Download free →</a>
+</div></div>
+
+<nav><div class="wrap">
+  <span class="brand"><i></i>Pass</span>
+  <span class="sp"></span>
+  <a class="nl" href="#how">How it works</a>
+  <a class="nl" href="#pointing">Pointing</a>
+  <a class="nl" href="#spec">Spec</a>
+  <span class="kbd"><b>⌃</b><b>fn</b></span>
+  <a class="btn dark sm" href="#get">Download</a>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <span class="badge rise"><span class="dots"><i></i><i></i><i></i></span> Works with Claude, Cursor & Codex</span>
+  <h1 class="rise">Point at it. Say what's wrong.</h1>
+  <p class="sub rise">Hold one chord and walk an interface out loud.
+    <em>Pass writes the brief, with the pixels already attached.</em></p>
+  <div class="cta rise">
+    <a class="btn dark" href="#get">Download for Mac</a>
+    <a class="btn out" href="#how">See a pass</a>
+  </div>
+  <p class="micro rise">Free while in beta · macOS 26 · Runs entirely on device</p>
+  <div class="frame rise">
+    <div class="stage" id="stage" role="img"
+         aria-label="A pass in progress: spoken notes captured against a web page, then collected into a review panel.">
+      <div class="mock">
+        <div class="nav"><span class="logo" id="t-logo"></span><span class="sk" style="width:54px"></span>
+          <span class="sp"></span><span class="sk" style="width:28px"></span>
+          <span class="sk" style="width:34px"></span><span class="sk" style="width:30px"></span></div>
+        <div class="doc"><div class="bar" id="t-head"></div><div class="bar s"></div>
+          <div class="btns"><span class="b" id="t-btn"></span><span class="b o"></span></div></div>
+      </div>
+      <div class="hring" id="hring"></div>
+      <div class="inst" id="inst">
+        <div class="hud">
+          <div class="top"><span class="wv"><i></i><i></i><i></i><i></i><i></i></span>
+            <span class="st">LISTENING · <span id="hcnt">0</span></span></div>
+          <div class="ln" id="hline"></div>
+          <div class="cp"><i></i><span id="hbind">link · logo</span></div>
+        </div>
+        <div class="done" id="hdone">
+          <div class="dh"><b>3 notes</b><span>one pass</span></div>
+          <div class="dr" id="hrows"></div>
+          <div class="df"><span>Copy</span><span class="g">Paste into Claude</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div></header>
+
+<section id="how"><div class="wrap">
+  <div class="head rise">
+    <p class="label">How it works</p>
+    <h2>A review pass is one take, not forty tickets.</h2>
+    <p>You already know what's wrong with the page. The cost is writing it down — screenshotting,
+      cropping, describing which of four similar buttons you meant.</p>
+  </div>
+
+  <div class="bento">
+    <div class="card c-2 rise">
+      <h3>One hold</h3>
+      <div class="steps">
+        <div class="step"><span class="n">1</span><div><b>Hold ⌃ fn</b><span>The panel names what's under the cursor.</span></div></div>
+        <div class="step"><span class="n">2</span><div><b>Talk</b><span>Every pause closes a note. It keeps listening.</span></div></div>
+        <div class="step"><span class="n">3</span><div><b>Let go</b><span>The pass opens for review.</span></div></div>
+      </div>
+    </div>
+
+    <div class="card c-4 rise">
+      <h3>What you get</h3>
+      <div class="field">
+        <div class="bar"><b>pass.txt</b><span class="sp"></span><span class="btn out sm" style="padding:4px 10px;font-size:11.5px">Copy</span></div>
+<pre><b>Feedback pass — 3 notes from asset-supply.com</b>
+
+1. The hero image is too dominant — bring it down so the headline leads.
+   screenshot: ~/.ambient/shots/8AFCC5BE-1.png
+   context: https://asset-supply.com/ · image · "hero-01"
+
+2. Increase the opacity of this, it's disappearing on white.
+   screenshot: ~/.ambient/shots/B802670C-1.png
+   context: https://asset-supply.com/ · link · "Asset Supply©"</pre>
+      </div>
+    </div>
+
+    <div class="card c-3 fill rise">
+      <h3>Where it goes</h3>
+      <p>Copy it, or paste it in and send it yourself. Pass never sends on your behalf.</p>
+      <div class="tiles">
+        <span class="tile"><i></i>Claude Code</span>
+        <span class="tile"><i></i>Cursor</span>
+        <span class="tile"><i></i>Codex</span>
+        <span class="tile"><i></i>Clipboard</span>
+      </div>
+    </div>
+
+    <div class="card c-3 rise">
+      <h3>Nothing is uploaded</h3>
+      <dl class="kv">
+        <div class="kvr"><dt>Transcription</dt><dd>On device</dd></div>
+        <div class="kvr"><dt>Frames</dt><dd>In memory, discarded after</dd></div>
+        <div class="kvr"><dt>Passwords</dt><dd>Capture halts automatically</dd></div>
+        <div class="kvr"><dt>Network</dt><dd>Not required</dd></div>
+      </dl>
+    </div>
+  </div>
+</div></section>
+
+<section id="faster" style="border-top:1px solid var(--line)"><div class="wrap">
+  <div class="head rise">
+    <p class="label">Why it's faster</p>
+    <h2>Talking is the faster channel. The ring is what keeps it precise.</h2>
+    <p>Nothing clever is happening here. The gap between the two channels is the whole
+      product — everything else exists so the faster one loses none of the precision of
+      the slower one.</p>
+  </div>
+
+  <div class="bento">
+    <div class="card c-3 rise">
+      <h3>The physics</h3>
+      <div class="meter">
+        <div class="r"><b>Speaking</b><span class="t"><i class="k" style="right:0"></i></span><span class="v num">150 wpm</span></div>
+        <div class="r"><b>Typing</b><span class="t"><i style="width:27%"></i></span><span class="v num">40 wpm</span></div>
+      </div>
+      <p>You speak about 150 words a minute. You type about 40.</p>
+    </div>
+
+    <div class="card c-3 rise">
+      <h3>It pays for itself before the first pass ends</h3>
+      <dl class="kv">
+        <div class="kvr"><dt>Costs</dt><dd class="num">€15 / month</dd></div>
+        <div class="kvr"><dt>Breaks even</dt><dd class="num">10 minutes at €90/hr</dd></div>
+        <div class="kvr"><dt>One pass</dt><dd class="num">returns about €54</dd></div>
+      </dl>
+      <p>One pass saves thirty-six minutes. You are ahead a quarter of the way into the
+        first one you record.</p>
+    </div>
+
+    <div class="card c-6 fill rise">
+      <h3>A week of review</h3>
+      <div class="meter">
+        <div class="r"><b>Mon</b><span class="t"><i style="width:62%"></i><i class="k" style="width:7%"></i></span></div>
+        <div class="r"><b>Tue</b><span class="t"><i style="width:38%"></i><i class="k" style="width:4%"></i></span></div>
+        <div class="r"><b>Wed</b><span class="t"><i style="width:80%"></i><i class="k" style="width:9%"></i></span></div>
+        <div class="r"><b>Thu</b><span class="t"><i style="width:25%"></i><i class="k" style="width:3%"></i></span></div>
+        <div class="r"><b>Fri</b><span class="t"><i style="width:55%"></i><i class="k" style="width:6%"></i></span></div>
+      </div>
+      <div class="legend">
+        <span><i></i>Writing it up by hand</span>
+        <span><i class="k"></i>Recording a pass</span>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<section id="pointing" style="border-top:1px solid var(--line)"><div class="wrap">
+  <div class="head rise">
+    <p class="label">Pointing</p>
+    <h2>It knows which “this” you meant.</h2>
+    <p>The cursor is sampled continuously and every transcribed word carries the instant it was
+      spoken. Say “this” and Pass looks up where you were pointing <b>at that word</b> — not where
+      the mouse drifted to by the end of the sentence.</p>
+  </div>
+  <div class="bento">
+    <figure class="ring c-4 rise">
+      <img src="assets/ring-close.png" alt="A crop with the cursor ring on the element">
+      <figcaption>“Increase the opacity of <b>this</b>.” — the ring marks the element, not the sentence.</figcaption>
+    </figure>
+    <div class="card c-2 rise">
+      <h3>Per word, not per sentence</h3>
+      <p>“Move this above that” marks two different elements, resolved at two different instants.</p>
+      <dl class="kv">
+        <div class="kvr"><dt>Cursor</dt><dd>Sampled 10×/second</dd></div>
+        <div class="kvr"><dt>Words</dt><dd>Audio-timestamped</dd></div>
+        <div class="kvr"><dt>Context</dt><dd>URL, role, label</dd></div>
+      </dl>
+    </div>
+  </div>
+</div></section>
+
+<section id="after" style="border-top:1px solid var(--line)"><div class="wrap">
+  <div class="head rise">
+    <p class="label">What it changes</p>
+    <h2>From noticing to fixed, in one sitting.</h2>
+    <p>The forty minutes you save is the part you can count. The part you can't is that the
+      work reaches your agent while you are still looking at the page.</p>
+  </div>
+
+  <div class="bento">
+    <div class="card c-3 rise">
+      <h3>Time to the fix, not time at the keyboard</h3>
+      <div class="steps">
+        <div class="step"><span class="n">1</span><div><b>14:02</b><span>You walk the page and talk.</span></div></div>
+        <div class="step"><span class="n">2</span><div><b>14:06</b><span>Eleven notes land in your agent.</span></div></div>
+        <div class="step"><span class="n">3</span><div><b>14:24</b><span>The branch is open.</span></div></div>
+      </div>
+      <p>Twenty-two minutes from noticing to fixed. The old version of this ends with a
+        ticket, tomorrow.</p>
+    </div>
+
+    <div class="card c-3 rise">
+      <h3>Written for your agent, not for you</h3>
+      <div class="field">
+        <div class="bar"><b>terminal</b><span class="sp"></span><span class="btn out sm" style="padding:4px 10px;font-size:11.5px">Copy</span></div>
+<pre><b>npx @ambient/mcp</b>
+
+Then ask your agent:
+“Read the latest pass and fix everything in it.”</pre>
+      </div>
+      <div class="tiles">
+        <div class="tile"><i></i>Claude Code</div>
+        <div class="tile"><i></i>Cursor</div>
+        <div class="tile"><i></i>Codex</div>
+        <div class="tile"><i></i>Any MCP client</div>
+      </div>
+    </div>
+
+    <div class="card c-6 rise">
+      <h3>Priced against your own hour</h3>
+      <div class="rate">
+        <span class="box"><s>€</s><input id="rate" value="90" inputmode="numeric" aria-label="Your billable hour"></span>
+        <em>× 4 hours saved a month</em>
+      </div>
+      <p style="font-size:16px;color:var(--ink)">Pass gives back about
+        <b id="back" class="num" style="font-weight:500">€360</b> of your month and costs
+        <b class="num" style="font-weight:500">€15</b>.</p>
+    </div>
+  </div>
+</div></section>
+
+<section id="spec" style="border-top:1px solid var(--line)"><div class="wrap">
+  <div class="head rise">
+    <p class="label">Spec</p>
+    <h2>Requirements</h2>
+  </div>
+  <div class="bento">
+    <div class="card c-6 rise">
+      <dl class="kv">
+        <div class="kvr"><dt>Platform</dt><dd>macOS 26 or later, Apple silicon</dd></div>
+        <div class="kvr"><dt>Permissions</dt><dd>Microphone, Accessibility, Screen Recording</dd></div>
+        <div class="kvr"><dt>Output</dt><dd>Plain text with image paths</dd></div>
+        <div class="kvr"><dt>Storage</dt><dd>Only the crops a note claims are written to disk</dd></div>
+        <div class="kvr"><dt>Price</dt><dd>Free while in beta</dd></div>
+      </dl>
+    </div>
+  </div>
+</div></section>
+
+<section class="end" id="get"><div class="wrap">
+  <h2 class="rise">Stop writing down what you can already see.</h2>
+  <div class="cta rise" style="margin-top:26px"><a class="btn dark" href="#">Download for Mac</a></div>
+  <p class="micro rise">Free while in beta</p>
+</div></section>
+
+<footer><div class="wrap">
+  <span class="brand" style="font-size:13.5px"><i style="width:15px;height:15px"></i>Pass</span>
+  <span class="sp"></span>
+  <a href="#">Press kit</a><a href="#">Privacy</a><a href="#">Changelog</a>
+</div></footer>
+
+<div class="dock" id="dock"><div class="in">
+  <p><b>Four minutes of talking</b> — eleven notes, eleven screenshots, already written.</p>
+  <a class="btn dark sm" href="#get">Download free</a>
+</div></div>
+
+<script>
+/* Live hero. The waveform tracks a damped state variable rather than a clock,
+   so it reads as a response to something rather than decoration. */
+(function(){
+  var stage = document.getElementById('stage');
+  if (!stage) return;
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  var NOTES = [
+    ['Increase the opacity of this — it disappears on white.', 'link · logo',     't-logo'],
+    ['This heading is too dominant; let it sit back.',         'heading · h1',    't-head'],
+    ['Fix the spacing around this button.',                    'button · primary','t-btn']
+  ];
+  var rows = document.getElementById('hrows');
+  NOTES.forEach(function(n,i){
+    var r = document.createElement('div');
+    r.className = 'nr';
+    r.innerHTML = '<span class="i">'+(i+1)+'</span><span class="th"></span>'+
+                  '<span><b>'+n[0]+'</b><span>'+n[1]+'</span></span>';
+    rows.appendChild(r);
+  });
+  if (reduce.matches) { document.getElementById('inst').classList.add('open'); return; }
+
+  var bars = [].slice.call(stage.querySelectorAll('.wv i'));
+  var line = document.getElementById('hline'), cnt = document.getElementById('hcnt');
+  var bind = document.getElementById('hbind'), ring = document.getElementById('hring');
+  var inst = document.getElementById('inst');
+  var W = [0.45,0.8,1,0.72,0.4], amp = 0, target = 0, speaking = false;
+
+  (function tick(){
+    target += (Math.random()-0.5) * (speaking ? 0.55 : 0.12);
+    target = Math.max(speaking ? 0.25 : 0, Math.min(1, target));
+    amp += (target - amp) * 0.13;
+    for (var i=0;i<bars.length;i++) bars[i].style.height = (3 + amp*15*W[i]).toFixed(1)+'px';
+    requestAnimationFrame(tick);
+  })();
+
+  var wait = function(ms){ return new Promise(function(r){ setTimeout(r, ms); }); };
+  function markRing(id){
+    var el = document.getElementById(id), a = el.getBoundingClientRect(), b = stage.getBoundingClientRect();
+    ring.style.left = (a.left - b.left + a.width/2)+'px';
+    ring.style.top  = (a.top  - b.top  + a.height/2)+'px';
+    ring.classList.add('on');
+  }
+  async function say(text, id){
+    var words = text.split(' ');
+    line.innerHTML = '';
+    speaking = true;
+    for (var i=0;i<words.length;i++){
+      line.innerHTML = words.slice(0,i+1).join(' ');
+      if (words[i].replace(/[^a-z]/gi,'').toLowerCase() === 'this') markRing(id);
+      await wait(78 + Math.random()*62);
+    }
+    if (!ring.classList.contains('on')) markRing(id);
+    speaking = false;
+  }
+  async function run(){
+    inst.classList.remove('open');
+    ring.classList.remove('on');
+    line.innerHTML = ''; cnt.textContent = '0';
+    await wait(700);
+    for (var i=0;i<NOTES.length;i++){
+      bind.textContent = NOTES[i][1];
+      await say(NOTES[i][0], NOTES[i][2]);
+      cnt.textContent = i+1;
+      await wait(620);
+      ring.classList.remove('on');
+      await wait(260);
+    }
+    await wait(300);
+    inst.classList.add('open');
+    await wait(3600);
+    run();
+  }
+  run();
+})();
+
+(function(){
+  var items=[].slice.call(document.querySelectorAll('.rise'));
+  if(!('IntersectionObserver' in window)||!items.length) return;
+  var armed=items.filter(function(el){return el.getBoundingClientRect().top>innerHeight*0.92});
+  armed.forEach(function(el,i){el.classList.add('armed');el.style.transitionDelay=(i%4)*50+'ms'});
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){
+    if(!e.isIntersecting)return;e.target.classList.remove('armed');e.target.classList.add('in');io.unobserve(e.target);
+  })},{rootMargin:'0px 0px -8% 0px',threshold:.01});
+  armed.forEach(function(el){io.observe(el)});
+  setTimeout(function(){armed.forEach(function(el){el.classList.remove('armed');el.classList.add('in')})},2000);
+})();
+/* Rate anchor — the card invites you to change the number, so it recalculates. */
+(function(){
+  var r = document.getElementById('rate'), out = document.getElementById('back');
+  if (!r || !out) return;
+  function calc(){ var v = parseFloat(r.value); out.textContent = '€' + Math.round((isFinite(v)&&v>0?v:0)*4); }
+  r.addEventListener('input', calc); calc();
+})();
+
+/* Dock. A scroll listener, not an IntersectionObserver: an observer does not fire
+   in a hidden or throttled tab, and its resting state would leave the dock stuck
+   off-screen. Here the resting state — hidden, at the top — is the correct one. */
+(function(){
+  var dock = document.getElementById('dock'), hero = document.querySelector('.hero');
+  if (!dock) return;
+  function update(){
+    dock.classList.toggle('up', window.scrollY > (hero ? hero.offsetHeight * 0.7 : 600));
+  }
+  addEventListener('scroll', update, {passive:true});
+  addEventListener('resize', update);
+  update();
+})();
+</script>
+</body></html>

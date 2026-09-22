@@ -1,0 +1,20 @@
+Stable signing identity
+=======================
+
+Every rebuild changes an ad-hoc signature, so macOS sees a different app and
+drops its Screen Recording and Accessibility grants. That failure looks exactly
+like the app being broken, and it has cost this build several rounds.
+
+Installing a self-signed identity once fixes it permanently — make.sh picks it
+up automatically and the permissions then survive every rebuild:
+
+    security import "$HOME/Claude 1/ambient/signing/ambient.p12" \
+      -k ~/Library/Keychains/login.keychain-db -P ambient -T /usr/bin/codesign
+
+The passphrase is "ambient". An empty one fails: macOS rejects the PKCS#12 MAC
+that OpenSSL writes by default, which reads as "wrong password".
+
+Then rebuild (./make.sh) and grant the two permissions one last time.
+
+The certificate is self-signed and local — it is not a developer account, and
+it does nothing beyond giving this app a stable identity on this machine.

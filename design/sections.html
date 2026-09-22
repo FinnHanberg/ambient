@@ -1,0 +1,1036 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ambient — value-to-conversion sections</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'sans-serif'] },
+      borderRadius: { lg: '10px', md: '8px', sm: '6px' },
+      colors: {
+        background: 'hsl(var(--background))', foreground: 'hsl(var(--foreground))',
+        muted: 'hsl(var(--muted))', 'muted-foreground': 'hsl(var(--muted-foreground))',
+        border: 'hsl(var(--border))', card: 'hsl(var(--card))',
+        accent: 'hsl(var(--accent))', 'accent-foreground': 'hsl(var(--accent-foreground))',
+      },
+    },
+  },
+}
+</script>
+<style>
+/* shadcn token set — one accent, light and dark share names */
+:root{
+  --background:0 0% 100%; --foreground:240 10% 4%;
+  --muted:240 5% 96%; --muted-foreground:240 4% 46%;
+  --border:240 6% 90%; --card:0 0% 100%;
+  --accent:211 100% 50%; --accent-foreground:0 0% 100%;
+}
+:root[data-theme="dark"]{
+  --background:240 10% 4%; --foreground:0 0% 98%;
+  --muted:240 4% 12%; --muted-foreground:240 5% 60%;
+  --border:240 4% 16%; --card:240 8% 7%;
+  --accent:211 100% 55%; --accent-foreground:0 0% 100%;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --background:240 10% 4%; --foreground:0 0% 98%;
+    --muted:240 4% 12%; --muted-foreground:240 5% 60%;
+    --border:240 4% 16%; --card:240 8% 7%;
+    --accent:211 100% 55%; --accent-foreground:0 0% 100%;
+  }
+}
+body{font-feature-settings:"cv11";}
+.tnum{font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body class="bg-background text-foreground font-sans antialiased text-[15px]">
+
+<div class="mx-auto max-w-[1080px] px-6 sm:px-10">
+
+  <header class="py-16 border-b border-border">
+    <div class="flex items-start justify-between gap-6">
+      <p class="text-[12px] font-medium text-muted-foreground">Ambient · website sections</p>
+      <button id="theme" class="rounded-md border border-border px-3 py-1.5 text-[13px] font-medium
+        transition-colors duration-200 hover:bg-muted">Light</button>
+    </div>
+    <h1 class="mt-3 text-[36px] leading-[1.1] font-semibold tracking-[-0.02em] max-w-[22ch]">
+      Ten ways to say “look what that just saved you”.</h1>
+    <p class="mt-4 max-w-[62ch] text-muted-foreground">
+      Every block below is the same communication as <span class="text-foreground font-medium">A4 · Time ledger</span>
+      — demonstrate the value that just occurred, then ask — rebuilt as a website section
+      rather than an in-app card. Each has a note on what it costs you to claim.</p>
+  </header>
+
+  <!-- 01 ───────────────────────────────────────── -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">01</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">The ledger, full width</h2>
+    </div>
+
+    <div class="rounded-lg border border-border bg-card p-8 sm:p-12">
+      <div class="grid gap-8 sm:grid-cols-[1.2fr_1fr] sm:items-center">
+        <div>
+          <p class="text-[12px] font-medium text-accent">That pass took 4 minutes</p>
+          <p class="mt-3 text-[30px] leading-[1.15] font-semibold tracking-[-0.02em]">
+            Writing the same eleven notes by hand takes about
+            <span class="tnum">40</span> minutes.</p>
+          <p class="mt-4 text-muted-foreground max-w-[46ch]">
+            Eleven notes, three pages, eleven screenshots — each one cropped and ringed on the
+            thing you were pointing at.</p>
+          <div class="mt-7 flex flex-wrap gap-3">
+            <button class="rounded-md bg-accent px-4 py-2.5 text-[14px] font-medium text-accent-foreground
+              transition-opacity duration-200 hover:opacity-90">Download for Mac</button>
+            <button class="rounded-md border border-border px-4 py-2.5 text-[14px] font-medium
+              transition-colors duration-200 hover:bg-muted">Watch a pass</button>
+          </div>
+        </div>
+        <div class="rounded-md border border-border bg-muted/40 p-5">
+          <dl class="space-y-3.5">
+            <div class="flex justify-between text-[14px]"><dt class="text-muted-foreground">Spoken</dt><dd class="tnum font-medium">4 min</dd></div>
+            <div class="flex justify-between text-[14px]"><dt class="text-muted-foreground">Typed equivalent</dt><dd class="tnum font-medium">~40 min</dd></div>
+            <div class="h-px bg-border"></div>
+            <div class="flex justify-between text-[14px]"><dt class="text-muted-foreground">Saved</dt><dd class="tnum font-semibold text-accent">36 min</dd></div>
+          </dl>
+        </div>
+      </div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> the 40-minute figure has to be
+      defensible. Overclaim once and every number on the page reads as marketing.</p>
+  </section>
+
+  <!-- 02 ───────────────────────────────────────── -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">02</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">Before and after, side by side</h2>
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="rounded-lg border border-border bg-card p-6">
+        <p class="text-[12px] font-medium text-muted-foreground">What you said</p>
+        <p class="mt-3 text-[14px] leading-relaxed text-muted-foreground">
+          “of, of, I want to start by increasing the opacity of this… and fixing the spacing
+          around this, it's tighter than the rest of the nav”</p>
+      </div>
+      <div class="rounded-lg border border-accent/30 bg-card p-6 shadow-sm">
+        <p class="text-[12px] font-medium text-accent">What your agent receives</p>
+        <ol class="mt-3 space-y-3 text-[14px]">
+          <li class="flex gap-3"><span class="tnum text-muted-foreground">1.</span>
+            <span>Increase the opacity of the wordmark — it disappears on white.
+              <span class="block text-[12px] text-muted-foreground mt-1">asset-supply.com · link · “Asset Supply©”</span></span></li>
+          <li class="flex gap-3"><span class="tnum text-muted-foreground">2.</span>
+            <span>Tighten nav spacing around Account to match the rest.
+              <span class="block text-[12px] text-muted-foreground mt-1">asset-supply.com · button · “Account”</span></span></li>
+        </ol>
+      </div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> nothing — this is the product
+      doing its job. The strongest section on the page, and the only one that needs no claim.</p>
+  </section>
+
+  <!-- 03 ───────────────────────────────────────── -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">03</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">Three tiles</h2>
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-3">
+      <div class="rounded-lg border border-border bg-card p-6">
+        <p class="text-[30px] font-semibold tracking-[-0.02em] tnum">4:12</p>
+        <p class="mt-1.5 text-[14px] font-medium">Average pass</p>
+        <p class="mt-1 text-[13px] text-muted-foreground">Across three pages and eleven notes.</p>
+      </div>
+      <div class="rounded-lg border border-border bg-card p-6">
+        <p class="text-[30px] font-semibold tracking-[-0.02em] tnum">11</p>
+        <p class="mt-1.5 text-[14px] font-medium">Screenshots, ringed</p>
+        <p class="mt-1 text-[13px] text-muted-foreground">One per pointing word, not one per pass.</p>
+      </div>
+      <div class="rounded-lg border border-border bg-card p-6">
+        <p class="text-[30px] font-semibold tracking-[-0.02em] tnum text-accent">0</p>
+        <p class="mt-1.5 text-[14px] font-medium">Tickets written</p>
+        <p class="mt-1 text-[13px] text-muted-foreground">The brief arrives already structured.</p>
+      </div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> tiles read as filler unless every
+      number is specific. “11 screenshots” works; “10× faster” does not.</p>
+  </section>
+
+  <!-- 04 ───────────────────────────────────────── -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">04</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">Priced against your own hour</h2>
+    </div>
+
+    <div class="rounded-lg border border-border bg-card p-8">
+      <div class="grid gap-8 sm:grid-cols-[1fr_auto] sm:items-end">
+        <div class="max-w-[48ch]">
+          <label class="text-[13px] font-medium text-muted-foreground">Your billable hour</label>
+          <div class="mt-2 flex items-center gap-3">
+            <div class="flex items-center rounded-md border border-border px-3 py-2">
+              <span class="text-muted-foreground mr-1">€</span>
+              <input value="90" class="w-16 bg-transparent text-[16px] font-medium tnum outline-none">
+            </div>
+            <span class="text-[14px] text-muted-foreground">× 4 hours saved a month</span>
+          </div>
+          <p class="mt-5 text-[18px] leading-snug">
+            Ambient gives back about <span class="font-semibold tnum">€360</span> of your month
+            and costs <span class="font-semibold tnum">€15</span>.</p>
+        </div>
+        <button class="rounded-md bg-accent px-5 py-2.5 text-[14px] font-medium text-accent-foreground
+          transition-opacity duration-200 hover:opacity-90">Start free</button>
+      </div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> anchors price to the buyer's rate
+      rather than to competing software — strongest for freelancers, meaningless to salaried teams.</p>
+  </section>
+
+  <!-- 05 ───────────────────────────────────────── -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">05</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">The artifact, annotated</h2>
+    </div>
+
+    <div class="rounded-lg border border-border bg-card overflow-hidden">
+      <div class="grid gap-0 sm:grid-cols-[1.4fr_1fr]">
+        <div class="bg-muted/50 p-6 flex items-center justify-center min-h-[240px]">
+          <div class="relative w-full max-w-[340px] rounded-md border border-border bg-background p-5">
+            <div class="h-2.5 w-24 rounded-sm bg-muted"></div>
+            <div class="mt-3 h-2 w-full rounded-sm bg-muted"></div>
+            <div class="mt-2 h-2 w-4/5 rounded-sm bg-muted"></div>
+            <span class="absolute right-7 top-8 h-7 w-7 rounded-full border-2 border-accent"></span>
+          </div>
+        </div>
+        <div class="p-7">
+          <p class="text-[12px] font-medium text-accent">The ring is the point</p>
+          <p class="mt-2.5 text-[16px] leading-relaxed">
+            When you said “this”, the cursor was here. Not where the mouse ended up four
+            seconds later.</p>
+          <p class="mt-3 text-[13px] text-muted-foreground">
+            Say “move this above that” and two elements get marked, from two different moments
+            in the same sentence.</p>
+        </div>
+      </div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> nothing, and it is the only
+      section a competitor cannot copy by writing better headlines.</p>
+  </section>
+
+  <!-- 06 ───────────────────────────────────────── -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">06</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">Two columns, one honest table</h2>
+    </div>
+
+    <div class="rounded-lg border border-border bg-card overflow-hidden">
+      <table class="w-full text-[14px]">
+        <thead><tr class="border-b border-border">
+          <th class="p-4 text-left font-medium text-muted-foreground w-1/3">Step</th>
+          <th class="p-4 text-left font-medium text-muted-foreground">By hand</th>
+          <th class="p-4 text-left font-medium">With a pass</th>
+        </tr></thead>
+        <tbody class="[&>tr]:border-b [&>tr]:border-border [&>tr:last-child]:border-0">
+          <tr><td class="p-4 text-muted-foreground">Notice it</td><td class="p-4">2 sec</td><td class="p-4 tnum">2 sec</td></tr>
+          <tr><td class="p-4 text-muted-foreground">Screenshot and crop</td><td class="p-4">40 sec</td><td class="p-4 tnum text-accent">0</td></tr>
+          <tr><td class="p-4 text-muted-foreground">Describe which element</td><td class="p-4">60 sec</td><td class="p-4 tnum text-accent">0</td></tr>
+          <tr><td class="p-4 text-muted-foreground">Write it up</td><td class="p-4">90 sec</td><td class="p-4 tnum">8 sec</td></tr>
+          <tr class="bg-muted/40"><td class="p-4 font-medium">Eleven times over</td><td class="p-4 font-medium tnum">~40 min</td><td class="p-4 font-semibold tnum">4 min</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> showing the per-step arithmetic is
+      what makes the total believable. Publish the row that isn't flattering — “notice it” is a tie.</p>
+  </section>
+
+  <!-- 07 ───────────────────────────────────────── -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">07</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">Quote carrying the number</h2>
+    </div>
+
+    <div class="rounded-lg border border-border bg-card p-8 sm:p-10">
+      <p class="text-[20px] leading-[1.45] tracking-[-0.01em] max-w-[54ch]">
+        “I walked the whole checkout flow talking for six minutes. It came back as nineteen
+        notes with screenshots. I'd have written maybe five of them.”</p>
+      <div class="mt-6 flex items-center gap-3">
+        <div class="h-9 w-9 rounded-full bg-muted"></div>
+        <div>
+          <p class="text-[14px] font-medium">Design lead</p>
+          <p class="text-[13px] text-muted-foreground">Two-person product team</p>
+        </div>
+      </div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> requires a real user. The detail
+      that sells it is “I'd have written maybe five” — the admission, not the praise.</p>
+  </section>
+
+  <!-- 08 ───────────────────────────────────────── -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">08</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">Allowance, shown before it bites</h2>
+    </div>
+
+    <div class="rounded-lg border border-border bg-card p-7 max-w-[520px]">
+      <div class="flex items-baseline justify-between">
+        <p class="text-[14px] font-medium">This month</p>
+        <p class="text-[13px] text-muted-foreground tnum">3 of 4 free passes</p>
+      </div>
+      <div class="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div class="h-full rounded-full bg-accent transition-all duration-200" style="width:75%"></div>
+      </div>
+      <p class="mt-4 text-[14px] text-muted-foreground">
+        The fourth is free too. After that, passes keep working on device — only the
+        frontier-model cleanup pauses.</p>
+      <button class="mt-5 w-full rounded-md bg-accent py-2.5 text-[14px] font-medium text-accent-foreground
+        transition-opacity duration-200 hover:opacity-90">Upgrade — €15/mo</button>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> a meter is only fair if the free
+      tier still works past zero. Holding captured work hostage is where tools get uninstalled.</p>
+  </section>
+
+  <!-- 09 ───────────────────────────────────────── -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">09</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">Running total as proof</h2>
+    </div>
+
+    <div class="rounded-lg border border-border bg-card p-7">
+      <div class="flex flex-wrap items-center gap-x-10 gap-y-5">
+        <div><p class="text-[24px] font-semibold tnum">2,140</p>
+          <p class="text-[13px] text-muted-foreground">passes recorded</p></div>
+        <div><p class="text-[24px] font-semibold tnum">23,800</p>
+          <p class="text-[13px] text-muted-foreground">notes captured</p></div>
+        <div><p class="text-[24px] font-semibold tnum">~1,400</p>
+          <p class="text-[13px] text-muted-foreground">hours not spent writing tickets</p></div>
+        <div class="ml-auto">
+          <button class="rounded-md border border-border px-4 py-2.5 text-[14px] font-medium
+            transition-colors duration-200 hover:bg-muted">Add yours</button></div>
+      </div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> needs real volume. Small honest
+      numbers beat large vague ones — “2,140” is credible, “thousands of designers” is not.</p>
+  </section>
+
+  <!-- 10 ───────────────────────────────────────── -->
+  <section class="py-14">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">10</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">The bar that follows you down</h2>
+    </div>
+
+    <div class="rounded-lg border border-border bg-card p-5 shadow-sm">
+      <div class="flex flex-wrap items-center gap-4">
+        <div class="h-8 w-8 rounded-md bg-muted flex-none"></div>
+        <p class="text-[14px] flex-1 min-w-[220px]">
+          <span class="font-medium">Four minutes of talking</span>
+          <span class="text-muted-foreground"> — eleven notes, eleven screenshots, already written.</span></p>
+        <button class="rounded-md bg-accent px-4 py-2 text-[14px] font-medium text-accent-foreground
+          transition-opacity duration-200 hover:opacity-90">Download free</button>
+      </div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> a sticky bar is the cheapest
+      conversion lift and the fastest way to look like everyone else. Earn it by carrying the
+      number, not the slogan.</p>
+  </section>
+
+  <!-- ══ PART TWO ══════════════════════════════ -->
+  <section class="pt-20 pb-10 border-t-2 border-border">
+    <p class="text-[12px] font-medium text-accent">Part two</p>
+    <h2 class="mt-3 text-[30px] leading-[1.15] font-semibold tracking-[-0.02em] max-w-[24ch]">
+      The first ten sell it. These remove the reasons not to.</h2>
+    <p class="mt-4 max-w-[64ch] text-muted-foreground">
+      This product asks for three alarming permissions, competes with a free incumbent, and
+      has an install that breaks in ways that look like the app being broken. Objection
+      handling is not the bottom of this page — for a tool like this it outranks the pitch.</p>
+  </section>
+
+  <!-- 11 -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">11</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">Nothing leaves the machine</h2>
+    </div>
+    <div class="rounded-lg border border-border bg-card p-8">
+      <p class="text-[20px] leading-snug font-medium max-w-[40ch]">
+        Turn off your network. It still works.</p>
+      <div class="mt-7 grid gap-x-10 gap-y-5 sm:grid-cols-3">
+        <div><p class="text-[14px] font-medium">Speech</p>
+          <p class="mt-1 text-[13px] text-muted-foreground">Transcribed by the system model on your
+            Mac. No audio is uploaded, ever.</p></div>
+        <div><p class="text-[14px] font-medium">Frames</p>
+          <p class="mt-1 text-[13px] text-muted-foreground">Held in memory while you hold the keys,
+            dropped when you let go. Only claimed crops touch disk.</p></div>
+        <div><p class="text-[14px] font-medium">Password fields</p>
+          <p class="mt-1 text-[13px] text-muted-foreground">Capture halts on secure input — the same
+            signal that blocks keyloggers.</p></div>
+      </div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> every sentence here is a promise
+      you can be audited on. Say “nothing is uploaded” only while it stays literally true.</p>
+  </section>
+
+  <!-- 12 -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">12</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">The permissions, before you download</h2>
+    </div>
+    <div class="rounded-lg border border-border bg-card divide-y divide-border">
+      <div class="p-5 sm:flex sm:gap-6 sm:items-baseline">
+        <p class="text-[14px] font-medium sm:w-44 flex-none">Microphone</p>
+        <p class="text-[13px] text-muted-foreground mt-1 sm:mt-0">To hear you while the keys are
+          held. <span class="text-foreground">Without it: nothing works.</span></p></div>
+      <div class="p-5 sm:flex sm:gap-6 sm:items-baseline">
+        <p class="text-[14px] font-medium sm:w-44 flex-none">Screen Recording</p>
+        <p class="text-[13px] text-muted-foreground mt-1 sm:mt-0">To crop what you pointed at.
+          <span class="text-foreground">Without it: notes arrive with no picture.</span></p></div>
+      <div class="p-5 sm:flex sm:gap-6 sm:items-baseline">
+        <p class="text-[14px] font-medium sm:w-44 flex-none">Accessibility</p>
+        <p class="text-[13px] text-muted-foreground mt-1 sm:mt-0">To read the element under the
+          cursor — and to see the hotkey at all.
+          <span class="text-foreground">Without it: the key does nothing, silently.</span></p></div>
+      <div class="p-5 bg-muted/40">
+        <p class="text-[13px]"><span class="font-medium">That last one is the trap.</span>
+          <span class="text-muted-foreground"> A global hotkey is invisible without Accessibility,
+          so the app looks dead rather than unpermitted. Ambient checks on launch, says so on the
+          panel, and clears itself the moment you grant it.</span></p></div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> nothing, and it is the highest-leverage
+      section on the page. Stage two of the funnel is where this product loses people.</p>
+  </section>
+
+  <!-- 13 -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">13</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">What it gets wrong</h2>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-3">
+      <div class="rounded-lg border border-border bg-card p-6">
+        <p class="text-[14px] font-medium">Transcription drifts</p>
+        <p class="mt-2 text-[13px] text-muted-foreground">Product names and strong accents come back
+          wrong often enough to matter. Every note is editable before it sends.</p></div>
+      <div class="rounded-lg border border-border bg-card p-6">
+        <p class="text-[14px] font-medium">Some apps say nothing</p>
+        <p class="mt-2 text-[13px] text-muted-foreground">Chromium and Electron expose no element
+          tree unless a screen reader runs. There you get the crop and the URL, not the element.</p></div>
+      <div class="rounded-lg border border-border bg-card p-6">
+        <p class="text-[14px] font-medium">macOS only</p>
+        <p class="mt-2 text-[13px] text-muted-foreground">It is built on frameworks that exist
+          nowhere else. There is no Windows version and there isn't going to be one.</p></div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> a competitor can quote this page
+      back at you. Worth it — sophisticated buyers discount any page without it.</p>
+  </section>
+
+  <!-- 14 -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">14</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">Next to the alternative, named</h2>
+    </div>
+    <div class="rounded-lg border border-border bg-card overflow-hidden">
+      <table class="w-full text-[14px]">
+        <thead><tr class="border-b border-border">
+          <th class="p-4 text-left font-medium text-muted-foreground w-[38%]"></th>
+          <th class="p-4 text-left font-medium">Ambient</th>
+          <th class="p-4 text-left font-medium text-muted-foreground">Aloud</th>
+        </tr></thead>
+        <tbody class="[&>tr]:border-b [&>tr]:border-border [&>tr:last-child]:border-0">
+          <tr><td class="p-4 text-muted-foreground">Price</td><td class="p-4">Free</td><td class="p-4">Free</td></tr>
+          <tr><td class="p-4 text-muted-foreground">Resolves which element “this” meant</td>
+            <td class="p-4 text-accent font-medium">Per spoken word</td><td class="p-4">Per session</td></tr>
+          <tr><td class="p-4 text-muted-foreground">Cleans up your rambling</td>
+            <td class="p-4 text-muted-foreground">No</td><td class="p-4 font-medium">Yes</td></tr>
+          <tr><td class="p-4 text-muted-foreground">Asks about ambiguity</td>
+            <td class="p-4 text-muted-foreground">No</td><td class="p-4 font-medium">Yes</td></tr>
+          <tr><td class="p-4 text-muted-foreground">Readable by your agent directly</td>
+            <td class="p-4 text-accent font-medium">MCP server</td><td class="p-4">Export</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> you are introducing people to a
+      competitor that beats you on two rows. Only run this section if the rows you win are the
+      ones buyers actually weigh — otherwise stay silent and let them find it themselves.</p>
+  </section>
+
+  <!-- 15 -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">15</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">Who this isn't for</h2>
+    </div>
+    <div class="rounded-lg border border-border bg-card p-8">
+      <div class="grid gap-7 sm:grid-cols-2">
+        <div>
+          <p class="text-[14px] font-medium text-muted-foreground">Skip it if</p>
+          <ul class="mt-3 space-y-2.5 text-[14px] text-muted-foreground">
+            <li>— You review in a browser and file tickets there already</li>
+            <li>— Your feedback is one line at a time, not twenty</li>
+            <li>— You share an office and can just say it out loud</li>
+          </ul></div>
+        <div>
+          <p class="text-[14px] font-medium">It earns its place if</p>
+          <ul class="mt-3 space-y-2.5 text-[14px]">
+            <li>— You hand UI work to an agent and re-describe the same screen daily</li>
+            <li>— Your reviews span several apps, not one browser tab</li>
+            <li>— You have said “no, the other one” more than once this week</li>
+          </ul></div>
+      </div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> some traffic that would have
+      converted and churned. That is the point — disqualification raises conversion among the
+      people who stay.</p>
+  </section>
+
+  <!-- 16 -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">16</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">Your first sixty seconds</h2>
+    </div>
+    <div class="grid gap-3 sm:grid-cols-4">
+      <div class="rounded-lg border border-border bg-card p-5">
+        <p class="text-[12px] font-medium text-muted-foreground tnum">0:00</p>
+        <p class="mt-2 text-[14px] font-medium">Open it</p>
+        <p class="mt-1 text-[13px] text-muted-foreground">Three prompts. Grant all three.</p></div>
+      <div class="rounded-lg border border-border bg-card p-5">
+        <p class="text-[12px] font-medium text-muted-foreground tnum">0:20</p>
+        <p class="mt-2 text-[14px] font-medium">Hold ⌃ fn</p>
+        <p class="mt-1 text-[13px] text-muted-foreground">A panel appears and names what's under
+          your cursor.</p></div>
+      <div class="rounded-lg border border-border bg-card p-5">
+        <p class="text-[12px] font-medium text-muted-foreground tnum">0:35</p>
+        <p class="mt-2 text-[14px] font-medium">Talk</p>
+        <p class="mt-1 text-[13px] text-muted-foreground">Point at three things. Say what's wrong
+          with each.</p></div>
+      <div class="rounded-lg border border-accent/30 bg-card p-5 shadow-sm">
+        <p class="text-[12px] font-medium text-accent tnum">0:55</p>
+        <p class="mt-2 text-[14px] font-medium">Let go</p>
+        <p class="mt-1 text-[13px] text-muted-foreground">Three notes, three crops, ready to
+          send.</p></div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> the clock has to be real. If the
+      permission dance takes four minutes, publishing “0:20” is the fastest way to lose someone
+      at minute three.</p>
+  </section>
+
+  <!-- 17 -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">17</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">Written for your agent, not for you</h2>
+    </div>
+    <div class="rounded-lg border border-border bg-card p-8">
+      <div class="grid gap-8 sm:grid-cols-[1fr_1fr] sm:items-center">
+        <div>
+          <p class="text-[16px] leading-relaxed max-w-[42ch]">
+            A pass is a plain file with image paths. Your agent can read it directly — no export
+            step, no copy and paste.</p>
+          <div class="mt-5 flex flex-wrap gap-2">
+            <span class="rounded-md border border-border px-2.5 py-1 text-[13px]">Claude Code</span>
+            <span class="rounded-md border border-border px-2.5 py-1 text-[13px]">Cursor</span>
+            <span class="rounded-md border border-border px-2.5 py-1 text-[13px]">Codex</span>
+            <span class="rounded-md border border-border px-2.5 py-1 text-[13px]">Any MCP client</span>
+          </div>
+        </div>
+        <div class="rounded-md border border-border bg-muted/40 p-5">
+          <p class="text-[13px] text-muted-foreground">Add the server</p>
+          <p class="mt-2 text-[14px] font-medium tnum">npx @ambient/mcp</p>
+          <div class="mt-4 h-px bg-border"></div>
+          <p class="mt-4 text-[13px] text-muted-foreground">Then ask your agent</p>
+          <p class="mt-2 text-[14px] leading-snug">“Read the latest pass and fix everything in it.”</p>
+        </div>
+      </div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> this speaks to developers, who
+      are not the same audience as the designers the rest of the page addresses. It belongs on
+      the page, low, or on its own.</p>
+  </section>
+
+  <!-- 18 -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">18</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">Visibly alive</h2>
+    </div>
+    <div class="rounded-lg border border-border bg-card divide-y divide-border">
+      <div class="p-5 flex gap-5 items-baseline">
+        <span class="text-[13px] text-muted-foreground tnum w-24 flex-none">0.4.1 · today</span>
+        <span class="text-[14px]">One hold now covers a whole pass — pauses close notes and it
+          keeps listening.</span></div>
+      <div class="p-5 flex gap-5 items-baseline">
+        <span class="text-[13px] text-muted-foreground tnum w-24 flex-none">0.4.0 · Fri</span>
+        <span class="text-[14px]">Frames are sampled while you speak, so each pointing word gets
+          its own crop.</span></div>
+      <div class="p-5 flex gap-5 items-baseline">
+        <span class="text-[13px] text-muted-foreground tnum w-24 flex-none">0.3.2 · Thu</span>
+        <span class="text-[14px]">Capture halts at password fields.</span></div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> a changelog that stops updating
+      is worse than none — a dated top entry says abandoned louder than an empty page says new.</p>
+  </section>
+
+  <!-- 19 -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">19</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">What the other person receives</h2>
+    </div>
+    <div class="rounded-lg border border-border bg-card p-7 max-w-[560px]">
+      <div class="flex items-baseline justify-between gap-4">
+        <p class="text-[16px] font-medium">asset-supply.com</p>
+        <p class="text-[13px] text-muted-foreground tnum">11 notes · 4 min</p></div>
+      <div class="mt-5 space-y-4">
+        <div class="flex gap-3.5">
+          <div class="h-12 w-16 flex-none rounded-md border border-border bg-muted"></div>
+          <div><p class="text-[14px]">Increase the opacity of the wordmark.</p>
+            <p class="mt-0.5 text-[13px] text-muted-foreground">link · “Asset Supply©”</p></div></div>
+        <div class="flex gap-3.5">
+          <div class="h-12 w-16 flex-none rounded-md border border-border bg-muted"></div>
+          <div><p class="text-[14px]">Nav spacing around Account is tighter than the rest.</p>
+            <p class="mt-0.5 text-[13px] text-muted-foreground">button · “Account”</p></div></div>
+      </div>
+      <div class="mt-6 pt-5 border-t border-border flex items-center justify-between gap-4">
+        <p class="text-[13px] text-muted-foreground">Recorded with Ambient</p>
+        <button class="rounded-md border border-border px-3 py-1.5 text-[13px] font-medium
+          transition-colors duration-200 hover:bg-muted">Get it free</button></div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> hosting, and a privacy surface —
+      you would be publishing screenshots of unreleased work. Every recipient is a qualified
+      lead, which is why it is tempting anyway.</p>
+  </section>
+
+  <!-- 20 -->
+  <section class="py-14">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">20</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">The four questions people actually ask</h2>
+    </div>
+    <div class="rounded-lg border border-border bg-card divide-y divide-border">
+      <div class="p-6">
+        <p class="text-[15px] font-medium">Is it listening all the time?</p>
+        <p class="mt-2 text-[14px] text-muted-foreground max-w-[64ch]">No. Audio reaches the
+          recogniser only while both keys are down. Let go and it stops — not muted, stopped.</p></div>
+      <div class="p-6">
+        <p class="text-[15px] font-medium">What happens to the screenshots?</p>
+        <p class="mt-2 text-[14px] text-muted-foreground max-w-[64ch]">They sit in a folder on your
+          Mac. Frames that no note claimed are discarded when the pass ends.</p></div>
+      <div class="p-6">
+        <p class="text-[15px] font-medium">Do I need an API key?</p>
+        <p class="mt-2 text-[14px] text-muted-foreground max-w-[64ch]">No. Everything runs on the
+          model built into macOS. A key is optional and only changes how the notes are worded.</p></div>
+      <div class="p-6">
+        <p class="text-[15px] font-medium">Why is it free?</p>
+        <p class="mt-2 text-[14px] text-muted-foreground max-w-[64ch]">Because it costs nothing to
+          run — no server, no inference bill. I built it for my own work and there is no reason
+          to charge you for a copy.</p></div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> the last answer commits you to
+      free. Say it only if you mean it — reversing it later reads as a bait.</p>
+  </section>
+
+  <!-- ══ PART THREE ════════════════════════════ -->
+  <section class="pt-20 pb-10 border-t-2 border-border">
+    <p class="text-[12px] font-medium text-accent">Part three</p>
+    <h2 class="mt-3 text-[30px] leading-[1.15] font-semibold tracking-[-0.02em] max-w-[24ch]">
+      Ten arguments about time, none of them the same argument.</h2>
+    <p class="mt-4 max-w-[64ch] text-muted-foreground">
+      “Saves you time” is the weakest version of this claim because everyone makes it. Each
+      block below makes it differently — as physics, as arithmetic you can check, as a
+      calendar, and once by dropping the claim entirely for a better one.</p>
+  </section>
+
+  <!-- 21 -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">21</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">The physics, not the claim</h2>
+    </div>
+    <div class="rounded-lg border border-border bg-card p-8">
+      <div class="grid gap-8 sm:grid-cols-2 sm:items-center">
+        <div>
+          <p class="text-[30px] leading-[1.15] font-semibold tracking-[-0.02em] max-w-[18ch]">
+            You speak about <span class="tnum">150</span> words a minute. You type about
+            <span class="tnum">40</span>.</p>
+          <p class="mt-4 text-[14px] text-muted-foreground max-w-[44ch]">
+            Nothing clever is happening here. The gap is the whole product — everything else
+            is making sure the faster channel loses none of the precision of the slower one.</p>
+        </div>
+        <div class="space-y-5">
+          <div>
+            <div class="flex justify-between text-[13px] mb-2">
+              <span class="font-medium">Speaking</span><span class="tnum text-muted-foreground">150 wpm</span></div>
+            <div class="h-2.5 rounded-full bg-muted overflow-hidden">
+              <div class="h-full rounded-full bg-accent" style="width:100%"></div></div>
+          </div>
+          <div>
+            <div class="flex justify-between text-[13px] mb-2">
+              <span class="font-medium">Typing</span><span class="tnum text-muted-foreground">40 wpm</span></div>
+            <div class="h-2.5 rounded-full bg-muted overflow-hidden">
+              <div class="h-full rounded-full bg-foreground/30" style="width:27%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> it invites the obvious reply —
+      dictation already exists. The section only holds if the page has already shown the ring.</p>
+  </section>
+
+  <!-- 22 -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">22</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">Four minutes, in units you can feel</h2>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-3">
+      <div class="rounded-lg border border-border bg-card p-6">
+        <p class="text-[14px] font-medium">Thirty-six minutes back</p>
+        <p class="mt-2 text-[13px] text-muted-foreground">Roughly one stand-up, one code review,
+          or the walk to get coffee and back twice.</p></div>
+      <div class="rounded-lg border border-border bg-card p-6">
+        <p class="text-[14px] font-medium">Per pass</p>
+        <p class="mt-2 text-[13px] text-muted-foreground">Not per day, not per project. Every time
+          you walk a screen and talk instead of type.</p></div>
+      <div class="rounded-lg border border-accent/30 bg-card p-6 shadow-sm">
+        <p class="text-[14px] font-medium">Six passes a month</p>
+        <p class="mt-2 text-[13px] text-muted-foreground">Half a working day you did not spend
+          describing buttons in sentences.</p></div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> the comparisons have to be
+      boring and true. “Two coffees” lands; “a flight to Berlin” reads as a lie about arithmetic.</p>
+  </section>
+
+  <!-- 23 -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">23</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">It compounds</h2>
+    </div>
+    <div class="rounded-lg border border-border bg-card p-8">
+      <!-- Linear scale, hours only. One pass (36m) beside a year (43h) is a 72x range —
+           no honest linear bar can show both, so it stays a caption. -->
+      <div class="flex items-end gap-4 sm:gap-10" style="height:190px">
+        <div class="flex-1 flex flex-col justify-end items-center gap-3" style="height:100%">
+          <p class="text-[15px] font-semibold tnum">3.6h</p>
+          <div class="w-full rounded-t-md bg-muted" style="height:15px"></div>
+          <p class="text-[13px] text-muted-foreground">A month</p></div>
+        <div class="flex-1 flex flex-col justify-end items-center gap-3" style="height:100%">
+          <p class="text-[15px] font-semibold tnum">11h</p>
+          <div class="w-full rounded-t-md bg-foreground/25" style="height:44px"></div>
+          <p class="text-[13px] text-muted-foreground">A quarter</p></div>
+        <div class="flex-1 flex flex-col justify-end items-center gap-3" style="height:100%">
+          <p class="text-[15px] font-semibold tnum text-accent">43h</p>
+          <div class="w-full rounded-t-md bg-accent" style="height:172px"></div>
+          <p class="text-[13px] text-muted-foreground">A year</p></div>
+      </div>
+      <p class="mt-6 text-[14px] text-muted-foreground max-w-[52ch]">
+        At six passes a month. More than a working week, recovered from a habit you already
+        have — you were going to review the page anyway.</p>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> annualised figures are the
+      oldest trick in software marketing. Show the per-pass number first or the chart reads as
+      one.</p>
+  </section>
+
+  <!-- 24 -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">24</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">It pays for itself before the first pass ends</h2>
+    </div>
+    <div class="rounded-lg border border-border bg-card p-8">
+      <div class="grid gap-8 sm:grid-cols-[1fr_auto] sm:items-center">
+        <div class="max-w-[46ch]">
+          <p class="text-[18px] leading-snug">
+            At <span class="tnum font-medium">€90</span> an hour, a month of Ambient costs
+            <span class="tnum font-medium">ten minutes</span> of your time.</p>
+          <p class="mt-3 text-[14px] text-muted-foreground">
+            One pass saves thirty-six. You are ahead roughly a quarter of the way into the
+            first one you record.</p>
+        </div>
+        <dl class="rounded-md border border-border bg-muted/40 p-5 space-y-3 min-w-[210px]">
+          <div class="flex justify-between text-[14px]"><dt class="text-muted-foreground">Costs</dt><dd class="tnum font-medium">€15 / mo</dd></div>
+          <div class="flex justify-between text-[14px]"><dt class="text-muted-foreground">Breaks even at</dt><dd class="tnum font-medium">10 min</dd></div>
+          <div class="h-px bg-border"></div>
+          <div class="flex justify-between text-[14px]"><dt class="text-muted-foreground">First pass returns</dt><dd class="tnum font-semibold text-accent">€54</dd></div>
+        </dl>
+      </div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> only works for people who bill
+      by the hour and know their rate. To a salaried designer this maths is invisible.</p>
+  </section>
+
+  <!-- 25 -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">25</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">A week, before and after</h2>
+    </div>
+    <div class="rounded-lg border border-border bg-card p-8">
+      <div class="space-y-4">
+        <div class="flex items-center gap-4">
+          <span class="text-[13px] text-muted-foreground w-16 flex-none">Mon</span>
+          <div class="flex-1 h-7 rounded-md bg-muted relative overflow-hidden">
+            <div class="absolute inset-y-0 left-0 bg-foreground/15 rounded-md" style="width:62%"></div>
+            <div class="absolute inset-y-0 left-0 bg-accent rounded-md" style="width:7%"></div></div>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="text-[13px] text-muted-foreground w-16 flex-none">Tue</span>
+          <div class="flex-1 h-7 rounded-md bg-muted relative overflow-hidden">
+            <div class="absolute inset-y-0 left-0 bg-foreground/15 rounded-md" style="width:38%"></div>
+            <div class="absolute inset-y-0 left-0 bg-accent rounded-md" style="width:4%"></div></div>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="text-[13px] text-muted-foreground w-16 flex-none">Wed</span>
+          <div class="flex-1 h-7 rounded-md bg-muted relative overflow-hidden">
+            <div class="absolute inset-y-0 left-0 bg-foreground/15 rounded-md" style="width:80%"></div>
+            <div class="absolute inset-y-0 left-0 bg-accent rounded-md" style="width:9%"></div></div>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="text-[13px] text-muted-foreground w-16 flex-none">Thu</span>
+          <div class="flex-1 h-7 rounded-md bg-muted relative overflow-hidden">
+            <div class="absolute inset-y-0 left-0 bg-foreground/15 rounded-md" style="width:25%"></div>
+            <div class="absolute inset-y-0 left-0 bg-accent rounded-md" style="width:3%"></div></div>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="text-[13px] text-muted-foreground w-16 flex-none">Fri</span>
+          <div class="flex-1 h-7 rounded-md bg-muted relative overflow-hidden">
+            <div class="absolute inset-y-0 left-0 bg-foreground/15 rounded-md" style="width:55%"></div>
+            <div class="absolute inset-y-0 left-0 bg-accent rounded-md" style="width:6%"></div></div>
+        </div>
+      </div>
+      <div class="mt-6 flex flex-wrap gap-6 text-[13px]">
+        <span class="flex items-center gap-2"><i class="h-2.5 w-2.5 rounded-sm bg-foreground/15"></i>
+          <span class="text-muted-foreground">Writing it up by hand</span></span>
+        <span class="flex items-center gap-2"><i class="h-2.5 w-2.5 rounded-sm bg-accent"></i>
+          <span class="text-muted-foreground">Recording a pass</span></span>
+      </div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> a shape like this is only
+      honest if it comes from logged passes. Drawn from imagination it is a chart-shaped claim.</p>
+  </section>
+
+  <!-- 26 -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">26</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">The interruption costs more than the typing</h2>
+    </div>
+    <div class="rounded-lg border border-border bg-card p-8">
+      <p class="text-[18px] leading-snug max-w-[50ch]">
+        The forty minutes is the part you can count. The part you can't is that each note
+        pulled you out of looking at the page.</p>
+      <div class="mt-7 grid gap-5 sm:grid-cols-2">
+        <div class="rounded-md border border-border p-5">
+          <p class="text-[13px] font-medium text-muted-foreground">Writing it up</p>
+          <p class="mt-2 text-[14px]">Look · stop · screenshot · crop · describe · find the page
+            again · look</p></div>
+        <div class="rounded-md border border-accent/30 p-5">
+          <p class="text-[13px] font-medium text-accent">Recording a pass</p>
+          <p class="mt-2 text-[14px]">Look · say it · keep looking</p></div>
+      </div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> resist attaching a number to
+      this. Every “context switching costs 23 minutes” statistic on a landing page is borrowed
+      from a study that measured something else.</p>
+  </section>
+
+  <!-- 27 -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">27</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">Time to the fix, not time at the keyboard</h2>
+    </div>
+    <div class="rounded-lg border border-border bg-card p-8">
+      <div class="relative pl-6 space-y-6 before:absolute before:left-[5px] before:top-2
+        before:bottom-2 before:w-px before:bg-border">
+        <div class="relative">
+          <span class="absolute -left-6 top-1.5 h-2.5 w-2.5 rounded-full bg-foreground/30"></span>
+          <p class="text-[14px]"><span class="tnum font-medium">14:02</span> — you walk the page and talk</p></div>
+        <div class="relative">
+          <span class="absolute -left-6 top-1.5 h-2.5 w-2.5 rounded-full bg-foreground/30"></span>
+          <p class="text-[14px]"><span class="tnum font-medium">14:06</span> — eleven notes land in your agent</p></div>
+        <div class="relative">
+          <span class="absolute -left-6 top-1.5 h-2.5 w-2.5 rounded-full bg-accent"></span>
+          <p class="text-[14px]"><span class="tnum font-medium">14:24</span> — the branch is open</p>
+          <p class="mt-1 text-[13px] text-muted-foreground">Twenty-two minutes from noticing to fixed.
+            The old version of this ends with a ticket, tomorrow.</p></div>
+      </div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> the strongest time argument on
+      the page, because it is the one a manager cares about — and the one that depends on an
+      agent actually doing the work well.</p>
+  </section>
+
+  <!-- 28 -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">28</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">The notes you would not have written</h2>
+    </div>
+    <div class="rounded-lg border border-border bg-card p-8">
+      <p class="text-[24px] leading-snug font-semibold tracking-[-0.018em] max-w-[34ch]">
+        You didn't save thirty-six minutes. You wrote eleven notes instead of four.</p>
+      <p class="mt-4 text-[15px] text-muted-foreground max-w-[58ch]">
+        When writing a note costs three minutes, you only write the ones worth three minutes.
+        The small stuff — the spacing, the opacity, the one that's a pixel off — never gets
+        recorded, and the page ships with it.</p>
+      <div class="mt-7 flex flex-wrap gap-2.5">
+        <span class="rounded-md bg-muted px-3 py-1.5 text-[13px] text-muted-foreground line-through">nav spacing</span>
+        <span class="rounded-md bg-muted px-3 py-1.5 text-[13px] text-muted-foreground line-through">wordmark opacity</span>
+        <span class="rounded-md bg-muted px-3 py-1.5 text-[13px] text-muted-foreground line-through">hover state</span>
+        <span class="rounded-md bg-muted px-3 py-1.5 text-[13px] text-muted-foreground line-through">footer rule</span>
+        <span class="rounded-md border border-accent/40 px-3 py-1.5 text-[13px]">all of them, now</span>
+      </div>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> nothing, and it is the best
+      argument in this part. It abandons the time claim for a quality one, which is harder to
+      dispute and closer to why people keep the tool.</p>
+  </section>
+
+  <!-- 29 -->
+  <section class="py-14 border-b border-border">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">29</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">What you get back, on a calendar</h2>
+    </div>
+    <div class="rounded-lg border border-border bg-card p-8">
+      <div class="grid grid-cols-5 gap-2.5">
+        <p class="text-[12px] font-medium text-muted-foreground text-center">Mon</p>
+        <p class="text-[12px] font-medium text-muted-foreground text-center">Tue</p>
+        <p class="text-[12px] font-medium text-muted-foreground text-center">Wed</p>
+        <p class="text-[12px] font-medium text-muted-foreground text-center">Thu</p>
+        <p class="text-[12px] font-medium text-muted-foreground text-center">Fri</p>
+        <div class="h-20 rounded-md bg-muted"></div>
+        <div class="h-20 rounded-md bg-muted"></div>
+        <div class="h-20 rounded-md bg-muted"></div>
+        <div class="h-20 rounded-md bg-muted"></div>
+        <div class="h-20 rounded-md border border-accent/40 bg-accent/5 flex items-center justify-center">
+          <span class="text-[12px] font-medium text-accent text-center leading-tight px-1">yours<br>again</span></div>
+      </div>
+      <p class="mt-6 text-[15px] max-w-[52ch]">
+        Six passes a month is about half a day. Over a quarter it is the Friday afternoon you
+        keep promising yourself.</p>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> charming and slightly soft. It
+      belongs near the bottom, after the arithmetic has already been shown somewhere above.</p>
+  </section>
+
+  <!-- 30 -->
+  <section class="py-14">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="text-[12px] font-medium text-muted-foreground tnum">30</span>
+      <h2 class="text-[24px] font-semibold tracking-[-0.015em]">Check it against your own week</h2>
+    </div>
+    <div class="rounded-lg border border-border bg-card p-8">
+      <div class="grid gap-6 sm:grid-cols-3 sm:items-end">
+        <div>
+          <label class="text-[13px] font-medium text-muted-foreground">Reviews a week</label>
+          <input id="calcA" value="2" inputmode="numeric" class="mt-2 w-full rounded-md border border-border bg-transparent px-3 py-2
+            text-[16px] font-medium tnum outline-none focus:border-accent transition-colors duration-200"></div>
+        <div>
+          <label class="text-[13px] font-medium text-muted-foreground">Notes in each</label>
+          <input id="calcB" value="11" inputmode="numeric" class="mt-2 w-full rounded-md border border-border bg-transparent px-3 py-2
+            text-[16px] font-medium tnum outline-none focus:border-accent transition-colors duration-200"></div>
+        <div>
+          <label class="text-[13px] font-medium text-muted-foreground">Minutes per note, by hand</label>
+          <input id="calcC" value="3" inputmode="numeric" class="mt-2 w-full rounded-md border border-border bg-transparent px-3 py-2
+            text-[16px] font-medium tnum outline-none focus:border-accent transition-colors duration-200"></div>
+      </div>
+      <div class="mt-7 pt-6 border-t border-border flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <p id="calcOut" class="text-[24px] font-semibold tracking-[-0.018em] tnum">5h 12m</p>
+        <p class="text-[15px] text-muted-foreground">a month, against
+          <span id="calcTalk" class="tnum">32</span> minutes of talking.</p>
+      </div>
+      <p class="mt-3 text-[13px] text-muted-foreground">Change any number. The ones above are
+        this page's own, and they are the ones being claimed everywhere else on it.</p>
+    </div>
+    <p class="mt-4 text-[13px] text-muted-foreground max-w-[70ch]">
+      <span class="font-medium text-foreground">Costs you:</span> handing the reader the dials
+      means they can disprove you. Do it anyway — a claim you invite people to check is worth
+      more than three you don't.</p>
+  </section>
+
+</div>
+<script>
+  // Both schemes share token names, so the toggle only flips one attribute.
+  // Section 30 invites the reader to check the arithmetic, so it has to do the arithmetic.
+  (function () {
+    var a = document.getElementById('calcA'), b = document.getElementById('calcB'),
+        c = document.getElementById('calcC'), out = document.getElementById('calcOut'),
+        talk = document.getElementById('calcTalk');
+    if (!a) return;
+    function n(el, fallback) { var v = parseFloat(el.value); return isFinite(v) && v >= 0 ? v : fallback; }
+    function recalc() {
+      var perMonth = n(a, 0) * 4.33, notes = n(b, 0), mins = n(c, 0);
+      var byHand = perMonth * notes * mins;
+      // A pass runs about 22 seconds of speech per note.
+      var spoken = perMonth * notes * (22 / 60);
+      var h = Math.floor(byHand / 60), m = Math.round(byHand % 60);
+      out.textContent = h > 0 ? h + 'h ' + m + 'm' : m + 'm';
+      talk.textContent = Math.round(spoken);
+    }
+    [a, b, c].forEach(function (el) { el.addEventListener('input', recalc); });
+    recalc();
+  })();
+
+  var root = document.documentElement, btn = document.getElementById('theme');
+  var qs = new URLSearchParams(location.search).get('theme');
+  if (qs) root.setAttribute('data-theme', qs);
+  function label() {
+    var dark = root.getAttribute('data-theme') === 'dark' ||
+      (!root.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+    btn.textContent = dark ? 'Light' : 'Dark';
+  }
+  label();
+  btn.addEventListener('click', function () {
+    var dark = root.getAttribute('data-theme') === 'dark' ||
+      (!root.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+    root.setAttribute('data-theme', dark ? 'light' : 'dark');
+    label();
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+.build/
+dist/
+Ambient.app/
+signing/*.p12
+Resources/InterVariable-full.ttf
+.DS_Store

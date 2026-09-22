@@ -1,0 +1,584 @@
+<title>Ambient Revenue Sandbox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --ink: #101215;
+    --ink-2: #4d545d;
+    --ink-3: #878e97;
+    --rule: #e0e2e6;
+    --ground: #f3f4f5;
+    --card: #ffffff;
+
+    --panel: #0e0f11;
+    --panel-2: #17191c;
+    --line: rgba(255,255,255,.12);
+    --on: rgba(255,255,255,.96);
+    --on-2: rgba(255,255,255,.55);
+    --on-3: rgba(255,255,255,.3);
+    --live: #c8553d;
+
+    --f: "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --ink: #eceef1; --ink-2: #a3a9b2; --ink-3: #6e757e;
+      --rule: #25282d; --ground: #0b0c0d; --card: #131518;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #eceef1; --ink-2: #a3a9b2; --ink-3: #6e757e;
+    --rule: #25282d; --ground: #0b0c0d; --card: #131518;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: var(--f); font-size: 15px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 56px 28px 120px; }
+
+  .eyebrow { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 16px; font-weight: 500; }
+  h1 { font-size: clamp(32px, 5vw, 48px); font-weight: 700; letter-spacing: -.03em; line-height: 1.03; margin: 0 0 16px; text-wrap: balance; }
+  .lead { font-size: 17px; color: var(--ink-2); max-width: 64ch; margin: 0; }
+  h2 { font-size: 23px; font-weight: 600; letter-spacing: -.02em; margin: 0 0 4px; }
+  h3 { font-size: 15px; font-weight: 600; margin: 0 0 4px; }
+  p { margin: 0 0 12px; max-width: 66ch; }
+  .dim { color: var(--ink-2); }
+  section { margin-top: 72px; }
+  .head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+  .num { font-size: 11px; font-weight: 600; letter-spacing: .1em; color: var(--ink-3); }
+  .sub { color: var(--ink-2); margin-bottom: 26px; max-width: 68ch; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 20px; }
+  .spec { border: 1px solid var(--rule); border-radius: 12px; background: var(--card); overflow: hidden; display: flex; flex-direction: column; }
+  .spec .stage { background: #08090a; padding: 22px; display: flex; align-items: center; justify-content: center; min-height: 190px; }
+  .spec .notes { padding: 15px 17px 17px; border-top: 1px solid var(--rule); }
+  .spec .verdict { font-size: 12.5px; color: var(--ink-2); margin: 4px 0 0; }
+  .tagrow { display: flex; gap: 6px; margin-top: 9px; flex-wrap: wrap; }
+  .tag { font-size: 10.5px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--rule); color: var(--ink-3); }
+  .tag.win { border-color: var(--ink); color: var(--ink); font-weight: 500; }
+
+  /* ---- in-app component styling ---- */
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; color: var(--on); width: 100%; max-width: 400px; box-shadow: 0 10px 28px rgba(0,0,0,.4); }
+  .p-head { display: flex; align-items: center; gap: 9px; padding: 13px 15px; border-bottom: 1px solid rgba(255,255,255,.07); }
+  .p-head b { font-size: 13.5px; font-weight: 600; }
+  .p-body { padding: 14px 15px; }
+  .p-foot { display: flex; align-items: center; gap: 8px; padding: 12px 15px; border-top: 1px solid rgba(255,255,255,.07); }
+  .x { margin-left: auto; width: 19px; height: 19px; border-radius: 50%; background: rgba(255,255,255,.07); color: var(--on-3); font-size: 10px; display: grid; place-items: center; }
+
+  .btn { font-size: 12px; font-weight: 500; padding: 6px 13px; border-radius: 999px; border: 1px solid var(--line); color: var(--on-2); background: rgba(255,255,255,.05); }
+  .btn.primary { background: #fff; color: #000; border-color: #fff; }
+  .btn.ghost { background: none; border: none; color: var(--on-3); padding-left: 4px; }
+
+  .row { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+  .row:last-child { border-bottom: none; }
+  .row .n { font-size: 10px; color: var(--on-3); width: 10px; flex: none; font-variant-numeric: tabular-nums; }
+  .thumb { width: 44px; height: 29px; border-radius: 4px; flex: none; border: 1px solid var(--line);
+    background: radial-gradient(circle at 60% 45%, rgba(255,255,255,.85) 0 2px, transparent 3px), linear-gradient(135deg, #2b2e34, #15171a); }
+  .row .t { font-size: 12px; line-height: 1.35; }
+  .row .c { font-size: 10px; color: var(--on-3); }
+
+  .locked { position: relative; }
+  .locked .veil { position: absolute; inset: 0; backdrop-filter: blur(4px); background: rgba(14,15,17,.55); border-radius: 7px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+  .veil .why { font-size: 11.5px; color: var(--on-2); text-align: center; max-width: 230px; line-height: 1.4; }
+
+  .meter { height: 3px; border-radius: 3px; background: rgba(255,255,255,.12); overflow: hidden; }
+  .meter i { display: block; height: 100%; background: rgba(255,255,255,.8); }
+  .meterline { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--on-3); margin-bottom: 6px; }
+
+  .diff { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: rgba(255,255,255,.08); border-radius: 7px; overflow: hidden; }
+  .diff > div { background: var(--panel); padding: 11px 12px; }
+  .diff .lab { font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--on-3); margin-bottom: 6px; }
+  .diff .said { font-size: 11.5px; color: var(--on-2); line-height: 1.45; }
+  .diff .clean { font-size: 11.5px; color: var(--on); line-height: 1.45; font-weight: 500; }
+
+  .plans { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .plan { border: 1px solid var(--line); border-radius: 9px; padding: 13px; }
+  .plan.on { border-color: rgba(255,255,255,.4); background: rgba(255,255,255,.04); }
+  .plan .nm { font-size: 11px; color: var(--on-3); letter-spacing: .08em; text-transform: uppercase; }
+  .plan .pr { font-size: 21px; font-weight: 600; margin: 5px 0 2px; font-variant-numeric: tabular-nums; }
+  .plan .pd { font-size: 10.5px; color: var(--on-3); }
+  .plan ul { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+  .plan li { font-size: 11.5px; color: var(--on-2); display: flex; gap: 6px; }
+  .plan li::before { content: "·"; color: var(--on-3); }
+
+  .strip { display: flex; align-items: center; gap: 11px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 11px 14px; width: 100%; max-width: 420px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--live); flex: none; }
+
+  .rec { border: 1px solid var(--rule); border-radius: 12px; background: var(--card); padding: 26px; }
+  .rec ol { margin: 14px 0 0; padding-left: 20px; }
+  .rec li { margin-bottom: 11px; color: var(--ink-2); }
+  .rec li b { color: var(--ink); font-weight: 600; }
+  footer { margin-top: 80px; padding-top: 20px; border-top: 1px solid var(--rule); color: var(--ink-3); font-size: 13px; }
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Ambient · revenue sandbox</p>
+  <h1>Ways to ask for money</h1>
+  <p class="lead">Every component below is built on one asset: the distance between what you said and what the brief says. That transform is the product, the demo, and the reason to pay — so each variant is judged on whether it makes that distance visible at the moment it matters.</p>
+
+  <!-- ================= A ================= -->
+  <section>
+    <div class="head"><span class="num">A</span><h2>The conversion moment</h2></div>
+    <p class="sub">All four live in the review panel, because that is the one screen where the value is already on the table. Nothing here blocks capture, export or the clipboard — those stay free permanently.</p>
+
+    <div class="grid">
+
+      <div class="spec">
+        <div class="stage">
+          <div class="panel">
+            <div class="p-head"><b>7 notes</b><span style="font-size:10.5px;color:var(--on-3)">asset-supply.com</span><span class="x">✕</span></div>
+            <div class="p-body locked">
+              <div class="row"><span class="n">1</span><span class="thumb"></span><span><span class="t">Increase the opacity of the link “Asset Supply©”</span><br><span class="c">nav · asset-supply.com</span></span></div>
+              <div class="row"><span class="n">2</span><span class="thumb"></span><span><span class="t">The spacing around “Account” is off</span><br><span class="c">button · asset-supply.com</span></span></div>
+              <div class="veil">
+                <div class="why">Cleaned briefs are part of Ambient Pro.</div>
+                <span class="btn primary">Unlock — €15/mo</span>
+                <span class="btn ghost">Copy raw instead</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <h3>A1 · Veiled clean view</h3>
+          <p class="verdict">The paid output is on screen, blurred, with the free path named right beside it. Honest, and the blur is doing real work — you can see there is something there.</p>
+          <div class="tagrow"><span class="tag win">strongest</span><span class="tag">no dead end</span></div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="stage">
+          <div class="panel">
+            <div class="p-head"><b>Before you send it</b><span class="x">✕</span></div>
+            <div class="p-body">
+              <div class="diff">
+                <div><div class="lab">You said</div><div class="said">um so yeah I want to basically increase the opacity of this</div></div>
+                <div><div class="lab">Pro writes</div><div class="clean">Increase the opacity of the link “Asset Supply©”</div></div>
+              </div>
+            </div>
+            <div class="p-foot"><span class="btn primary">Use Pro on this pass</span><span class="btn">Send raw</span></div>
+          </div>
+        </div>
+        <div class="notes">
+          <h3>A2 · Side-by-side transform</h3>
+          <p class="verdict">Shows the delta rather than describing it. The clearest argument in the product, and it costs one line of the user's own speech to make.</p>
+          <div class="tagrow"><span class="tag win">best demo</span><span class="tag">use on the landing page too</span></div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="stage">
+          <div class="panel">
+            <div class="p-head"><b>5 notes</b><span class="x">✕</span></div>
+            <div class="p-body">
+              <div class="meterline"><span>Enhanced passes</span><span>1 of 4 left</span></div>
+              <div class="meter"><i style="width:75%"></i></div>
+              <div style="font-size:11.5px;color:var(--on-2);margin-top:11px;line-height:1.45">
+                Your last free pass this month. Raw export stays unlimited.
+              </div>
+            </div>
+            <div class="p-foot"><span class="btn primary">Keep enhancing</span><span class="btn ghost">Maybe later</span></div>
+          </div>
+        </div>
+        <div class="notes">
+          <h3>A3 · Allowance meter</h3>
+          <p class="verdict">Creates the deadline honestly and shows it before it bites. Works only if the allowance is generous enough that hitting it means real use.</p>
+          <div class="tagrow"><span class="tag">pairs with A1</span></div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="stage">
+          <div class="panel">
+            <div class="p-head"><b>That pass took 4 minutes</b><span class="x">✕</span></div>
+            <div class="p-body">
+              <div style="font-size:12px;color:var(--on-2);line-height:1.5">
+                11 notes, 3 pages, 11 screenshots. Writing that by hand is about
+                <b style="color:var(--on)">40 minutes</b>.
+              </div>
+              <div class="meterline" style="margin-top:12px"><span>This month</span><span>6 passes · ~4 hrs saved</span></div>
+              <div class="meter"><i style="width:44%"></i></div>
+            </div>
+            <div class="p-foot"><span class="btn primary">Upgrade — €15/mo</span></div>
+          </div>
+        </div>
+        <div class="notes">
+          <h3>A4 · Time ledger</h3>
+          <p class="verdict">Prices against the hour you bill rather than against other software. Needs the estimate to be defensible — overclaim once and the whole panel reads as marketing.</p>
+          <div class="tagrow"><span class="tag">risky if inflated</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= B ================= -->
+  <section>
+    <div class="head"><span class="num">B</span><h2>Pricing surfaces</h2></div>
+    <p class="sub">Three shapes for the same decision. The question each answers is different: which plan, whether to start, and how much this will cost at your volume.</p>
+
+    <div class="grid">
+      <div class="spec">
+        <div class="stage">
+          <div class="panel">
+            <div class="p-head"><b>Ambient</b><span class="x">✕</span></div>
+            <div class="p-body">
+              <div class="plans">
+                <div class="plan">
+                  <div class="nm">Free</div>
+                  <div class="pr">€0</div>
+                  <div class="pd">forever</div>
+                  <ul><li>Unlimited passes</li><li>Screenshots</li><li>Raw export</li></ul>
+                </div>
+                <div class="plan on">
+                  <div class="nm">Pro</div>
+                  <div class="pr">€15</div>
+                  <div class="pd">per month</div>
+                  <ul><li>Written briefs</li><li>Send to Linear, Claude</li><li>Pass history</li></ul>
+                </div>
+              </div>
+            </div>
+            <div class="p-foot"><span class="btn primary">Start Pro</span><span class="btn ghost">Stay on Free</span></div>
+          </div>
+        </div>
+        <div class="notes">
+          <h3>B1 · Two plans, one difference</h3>
+          <p class="verdict">Free is a real tier, not a crippled trial — which is what makes the paid line credible. One axis of difference, no matrix.</p>
+          <div class="tagrow"><span class="tag win">ship this</span></div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="stage">
+          <div class="panel" style="max-width:340px">
+            <div class="p-body" style="padding:22px 20px">
+              <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-3)">Ambient Pro</div>
+              <div style="font-size:34px;font-weight:700;letter-spacing:-.03em;margin:8px 0 2px;font-variant-numeric:tabular-nums">€15<span style="font-size:14px;font-weight:400;color:var(--on-3)">/mo</span></div>
+              <div style="font-size:12px;color:var(--on-2);line-height:1.5;margin-top:10px">
+                Roughly one billable hour a year. Cancel in a click.
+              </div>
+            </div>
+            <div class="p-foot"><span class="btn primary" style="flex:1;text-align:center">Start — no card for 14 days</span></div>
+          </div>
+        </div>
+        <div class="notes">
+          <h3>B2 · Single price, anchored to time</h3>
+          <p class="verdict">Removes the comparison entirely. The anchor sentence does the work; without it this is just a number.</p>
+          <div class="tagrow"><span class="tag">for the landing page</span></div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="stage">
+          <div class="panel">
+            <div class="p-head"><b>Pay per pass</b><span class="x">✕</span></div>
+            <div class="p-body">
+              <div class="meterline"><span>Credits</span><span>18 left</span></div>
+              <div class="meter"><i style="width:36%"></i></div>
+              <ul style="list-style:none;padding:0;margin:14px 0 0;display:flex;flex-direction:column;gap:7px">
+                <li style="display:flex;font-size:12px;color:var(--on-2)"><span>50 briefs</span><span style="margin-left:auto;font-variant-numeric:tabular-nums">€9</span></li>
+                <li style="display:flex;font-size:12px;color:var(--on-2)"><span>200 briefs</span><span style="margin-left:auto;font-variant-numeric:tabular-nums">€29</span></li>
+              </ul>
+            </div>
+            <div class="p-foot"><span class="btn primary">Top up</span></div>
+          </div>
+        </div>
+        <div class="notes">
+          <h3>B3 · Credits</h3>
+          <p class="verdict">Fits the spiky way review work actually arrives, and nobody pays for a quiet month. Costs you predictable revenue and adds a purchase decision to every busy week.</p>
+          <div class="tagrow"><span class="tag">only if churn is the problem</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= C ================= -->
+  <section>
+    <div class="head"><span class="num">C</span><h2>States around the edges</h2></div>
+    <p class="sub">The unglamorous screens that decide whether someone stays. Each one is a place people quietly leave.</p>
+
+    <div class="grid">
+      <div class="spec">
+        <div class="stage">
+          <div class="strip">
+            <span class="dot"></span>
+            <span style="font-size:11px;letter-spacing:.08em;color:var(--on-2)">RECORDING · 7</span>
+            <span style="margin-left:auto;font-size:10.5px;color:var(--on-3)">Pro · unlimited</span>
+          </div>
+        </div>
+        <div class="notes">
+          <h3>C1 · Status line, not a badge</h3>
+          <p class="verdict">Plan state where the eye already goes during a pass. Reassurance, never a prompt — asking for money mid-recording would break the one rule the app has.</p>
+          <div class="tagrow"><span class="tag win">safe everywhere</span></div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="stage">
+          <div class="panel">
+            <div class="p-head"><b>Your trial ended</b><span class="x">✕</span></div>
+            <div class="p-body">
+              <div style="font-size:12px;color:var(--on-2);line-height:1.5">
+                Everything you captured is still here, and raw export still works.
+                Briefs are paused until you pick a plan.
+              </div>
+            </div>
+            <div class="p-foot"><span class="btn primary">Choose a plan</span><span class="btn ghost">Keep using Free</span></div>
+          </div>
+        </div>
+        <div class="notes">
+          <h3>C2 · Expiry that doesn't hold data hostage</h3>
+          <p class="verdict">The first sentence is the whole design. A tool that traps your work on expiry gets uninstalled and remembered badly.</p>
+          <div class="tagrow"><span class="tag win">non-negotiable</span></div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="stage">
+          <div class="panel">
+            <div class="p-head"><b>Send this pass to</b><span class="x">✕</span></div>
+            <div class="p-body">
+              <div class="row"><span class="t">Clipboard</span><span style="margin-left:auto;font-size:10.5px;color:var(--on-3)">Free</span></div>
+              <div class="row"><span class="t">Claude</span><span style="margin-left:auto;font-size:10.5px;color:var(--on-3)">Free</span></div>
+              <div class="row"><span class="t">Linear issue</span><span style="margin-left:auto;font-size:10.5px;color:var(--on)">Pro</span></div>
+              <div class="row"><span class="t">GitHub issue</span><span style="margin-left:auto;font-size:10.5px;color:var(--on)">Pro</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <h3>C3 · Destinations as the paid edge</h3>
+          <p class="verdict">Integrations are the most defensible thing to charge for — they cost you real maintenance, and the people who need them are teams, not individuals.</p>
+          <div class="tagrow"><span class="tag win">second lever</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= D ================= -->
+  <section>
+    <div class="head"><span class="num">D</span><h2>Sales scaffolding</h2></div>
+    <p class="sub">Outside the app. Both of these are the same transform, staged for someone who has never held the chord.</p>
+
+    <div class="grid">
+      <div class="spec">
+        <div class="stage" style="min-height:230px">
+          <div style="width:100%;max-width:420px">
+            <div style="font-size:23px;font-weight:600;letter-spacing:-.02em;color:var(--on);line-height:1.15;margin-bottom:6px">Say what's wrong.<br>Get a brief.</div>
+            <div style="font-size:12.5px;color:var(--on-2);margin-bottom:16px">Hold a key, walk the page, point at things.</div>
+            <div class="diff">
+              <div><div class="lab">4 min of talking</div><div class="said">um so yeah the spacing under this is way too tight…</div></div>
+              <div><div class="lab">What lands in your tracker</div><div class="clean">Reduce the gap under “The Art of Branding” to 24px</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <h3>D1 · Hero is the transform</h3>
+          <p class="verdict">No product shot, no feature list. The before/after is the only thing a stranger needs to understand in three seconds.</p>
+          <div class="tagrow"><span class="tag win">the landing page</span></div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="stage" style="min-height:230px">
+          <div style="width:100%;max-width:420px;display:flex;flex-direction:column;gap:9px">
+            <div style="font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-3)">One pass, start to finish</div>
+            <div class="strip" style="max-width:none"><span class="dot"></span><span style="font-size:11px;color:var(--on-2)">0:00 — hold ⌃fn</span></div>
+            <div class="strip" style="max-width:none"><span style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.3)"></span><span style="font-size:11px;color:var(--on-2)">2:14 — 9 notes, 3 pages</span></div>
+            <div class="strip" style="max-width:none"><span style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.75)"></span><span style="font-size:11px;color:var(--on-2)">2:20 — brief in Linear</span></div>
+          </div>
+        </div>
+        <div class="notes">
+          <h3>D2 · Timed proof strip</h3>
+          <p class="verdict">Answers “how long does this take” before it is asked. Real timings only — a fabricated one is found out on first use.</p>
+          <div class="tagrow"><span class="tag">below the hero</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ================= E ================= -->
+  <section>
+    <div class="head"><span class="num">E</span><h2>What to meter</h2></div>
+    <p class="sub">A free cap only works if the thing being counted is something the user chooses to spend. Meter something that accrues automatically and people change how they use the product to protect their balance — which is the opposite of what a cap is for.</p>
+
+    <div class="grid">
+      <div class="spec">
+        <div class="stage" style="min-height:150px">
+          <div style="width:100%;max-width:330px">
+            <div class="meterline"><span>Screenshots</span><span>31 of 40</span></div>
+            <div class="meter"><i style="width:78%"></i></div>
+            <div style="font-size:11.5px;color:var(--on-3);margin-top:12px;line-height:1.45">Accrues while you talk. One per pointing word.</div>
+          </div>
+        </div>
+        <div class="notes">
+          <h3>Images</h3>
+          <p class="verdict">Taxes the mechanic the product is built on. Nobody decides to spend a screenshot — they accrue from pointing, which is the behaviour you most want. A visible balance during capture makes people point less and talk vaguer.</p>
+          <div class="tagrow"><span class="tag">rejects the core loop</span></div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="stage" style="min-height:150px">
+          <div style="width:100%;max-width:330px">
+            <div class="meterline"><span>Notes</span><span>84 of 100</span></div>
+            <div class="meter"><i style="width:84%"></i></div>
+            <div style="font-size:11.5px;color:var(--on-3);margin-top:12px;line-height:1.45">One per thing you said.</div>
+          </div>
+        </div>
+        <div class="notes">
+          <h3>Notes</h3>
+          <p class="verdict">Punishes thoroughness. The user who finds fourteen problems on a page is your best user and hits the wall first. Same failure as images, one level up.</p>
+          <div class="tagrow"><span class="tag">punishes your best user</span></div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="stage" style="min-height:150px">
+          <div style="width:100%;max-width:330px">
+            <div class="meterline"><span>Passes</span><span>6 of 10</span></div>
+            <div class="meter"><i style="width:60%"></i></div>
+            <div style="font-size:11.5px;color:var(--on-3);margin-top:12px;line-height:1.45">One per recording, however long.</div>
+          </div>
+        </div>
+        <div class="notes">
+          <h3>Passes</h3>
+          <p class="verdict">A real unit of work — people think in reviews. Honest and legible. The flaw is mild: it rewards hoarding everything into one enormous pass rather than recording when the thought arrives.</p>
+          <div class="tagrow"><span class="tag">defensible second choice</span></div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="stage" style="min-height:150px">
+          <div style="width:100%;max-width:330px">
+            <div class="meterline"><span>Briefs written</span><span>7 of 10</span></div>
+            <div class="meter"><i style="width:70%"></i></div>
+            <div style="font-size:11.5px;color:var(--on-3);margin-top:12px;line-height:1.45">Only when you ask for the cleaned version. Capture and raw export are never counted.</div>
+          </div>
+        </div>
+        <div class="notes">
+          <h3>Briefs written</h3>
+          <p class="verdict">Counts a deliberate act, at the review panel, where the upgrade already lives. It is also the only thing that costs you anything to serve. Capture stays unlimited, so nobody ever hesitates to point at something.</p>
+          <div class="tagrow"><span class="tag win">meter this</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= F ================= -->
+  <section>
+    <div class="head"><span class="num">F</span><h2>How the cap is worn</h2></div>
+    <p class="sub">Same allowance, four temperaments. A counter that is always visible becomes a cost you are always paying attention to; one that only appears at the end is a surprise. The middle is where this lives.</p>
+
+    <div class="grid">
+      <div class="spec">
+        <div class="stage">
+          <div class="panel">
+            <div class="p-head"><b>7 notes</b><span style="font-size:10.5px;color:var(--on-3)">asset-supply.com</span><span style="margin-left:auto;font-size:10.5px;color:var(--on-3)">3 briefs left</span><span class="x" style="margin-left:9px">✕</span></div>
+            <div class="p-body">
+              <div class="row"><span class="n">1</span><span class="thumb"></span><span><span class="t">Increase the opacity of the link “Asset Supply©”</span></span></div>
+              <div class="row"><span class="n">2</span><span class="thumb"></span><span><span class="t">The spacing around “Account” is off</span></span></div>
+            </div>
+            <div class="p-foot"><span class="btn primary">Write the brief</span><span class="btn">Copy raw</span></div>
+          </div>
+        </div>
+        <div class="notes">
+          <h3>F1 · A number in the header</h3>
+          <p class="verdict">Stated once, where the decision is made, and never anywhere else. Low drama, easy to ignore until it is small.</p>
+          <div class="tagrow"><span class="tag win">default</span></div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="stage">
+          <div class="panel">
+            <div class="p-head"><b>7 notes</b><span class="x">✕</span></div>
+            <div class="p-body">
+              <div style="font-size:12px;color:var(--on-2);line-height:1.5">
+                This is your <b style="color:var(--on)">last free brief</b>. After it, raw export
+                keeps working and three more arrive on the 1st.
+              </div>
+            </div>
+            <div class="p-foot"><span class="btn primary">Write it</span><span class="btn ghost">Save it for later</span></div>
+          </div>
+        </div>
+        <div class="notes">
+          <h3>F2 · Silent until the last one</h3>
+          <p class="verdict">No counter at all until it matters, then a full sentence explaining exactly what happens next. “Save it for later” is the detail that makes this feel like a tool rather than a funnel.</p>
+          <div class="tagrow"><span class="tag win">pair with F1</span></div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="stage">
+          <div class="strip">
+            <span style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.35)"></span>
+            <span style="font-size:11px;color:var(--on-2)">Ambient</span>
+            <span style="margin-left:auto;font-size:10.5px;color:var(--on-3)">3 briefs left this month</span>
+          </div>
+        </div>
+        <div class="notes">
+          <h3>F3 · In the menu bar</h3>
+          <p class="verdict">Permanently visible, permanently a small tax on attention. Right for a metered API, wrong for a tool you want people to forget they are using.</p>
+          <div class="tagrow"><span class="tag">too present</span></div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="stage">
+          <div class="panel">
+            <div class="p-head"><b>Out of briefs</b><span class="x">✕</span></div>
+            <div class="p-body">
+              <div style="font-size:12px;color:var(--on-2);line-height:1.5">
+                Three more on <b style="color:var(--on)">1 October</b>, or unlimited from today.
+              </div>
+              <div class="meterline" style="margin-top:13px"><span>Raw export</span><span>always free</span></div>
+              <div class="meter"><i style="width:100%"></i></div>
+            </div>
+            <div class="p-foot"><span class="btn primary">Go unlimited — €15/mo</span><span class="btn">Copy raw</span></div>
+          </div>
+        </div>
+        <div class="notes">
+          <h3>F4 · The wall, with two doors</h3>
+          <p class="verdict">Names the date the allowance returns and shows raw at full bar beside it. A wall with a date on it is a pause; a wall without one is an ultimatum.</p>
+          <div class="tagrow"><span class="tag win">the cap screen</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= G ================= -->
+  <section>
+    <div class="head"><span class="num">G</span><h2>How big is the cap</h2></div>
+    <p class="sub">Two allowances doing different jobs. One teaches the product, one keeps the door open forever.</p>
+    <div class="rec">
+      <ol style="padding-left:20px;margin:0">
+        <li><b>Ten briefs to learn it.</b> A one-off allowance, not monthly. Enough to run real reviews for two or three weeks and feel the difference between talking for four minutes and writing tickets for forty. Fewer than ten and the habit never forms; far more and there is no reason to decide.</li>
+        <li><b>Then three a month, forever.</b> Not a trial that ends — a free tier that persists. Someone reviewing occasionally stays free and stays happy; someone reviewing weekly hits three by the second week and upgrades without being cornered. It also means uninstalling is never the cheaper option.</li>
+        <li><b>Capture, screenshots and raw export: never counted.</b> The meter only moves when you ask for the written brief.</li>
+      </ol>
+      <p class="dim" style="margin:16px 0 0">Your forty-images instinct was the right size — roughly two weeks of real use — attached to the wrong noun. Ten briefs is about the same span of time, spent on something the user actually chooses.</p>
+    </div>
+  </section>
+
+  <!-- ================= H ================= -->
+  <section>
+    <div class="head"><span class="num">H</span><h2>What I would ship</h2></div>
+    <div class="rec">
+      <p class="dim" style="margin:0">Five of the twelve, in this order. The rest are alternatives to reach for if these stall.</p>
+      <ol>
+        <li><b>A2 side-by-side transform</b> as the default review footer, shown free on every pass. It is the demo and the argument at once, and seeing it repeatedly is what builds the want.</li>
+        <li><b>B1 two plans</b> with Free as a genuine tier, metered on <b>briefs written</b> — ten to learn it, then three a month forever. Capture, screenshots and raw export never counted.</li>
+        <li><b>F1 + F2 together</b> — a quiet number in the review header, and a full sentence only on the last one. Then <b>F4</b> at the wall, with the return date named.</li>
+        <li><b>C2 expiry that keeps your data</b>. The cheapest goodwill in the product and the easiest thing to get catastrophically wrong.</li>
+        <li><b>C3 destinations</b> as the second lever when teams arrive. Integrations cost real maintenance, so charging for them needs no justification.</li>
+      </ol>
+      <p class="dim" style="margin:16px 0 0">Two things to hold to: nothing may interrupt a pass, ever — not a prompt, not a badge, not a meter. And the raw path stays free and unlimited forever, because a capture tool people cannot trust to give their words back is not worth paying for either.</p>
+    </div>
+  </section>
+
+  <footer>Ambient revenue sandbox · twenty components, five recommended · all copy is real, all numbers are placeholders</footer>
+</div>

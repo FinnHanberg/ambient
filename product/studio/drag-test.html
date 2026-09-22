@@ -1,0 +1,40 @@
+<!doctype html><meta charset="utf-8"><title>drag test</title>
+<pre id="log" style="font:14px/1.7 ui-monospace,monospace;padding:20px"></pre>
+<script type="module">
+const log = document.getElementById('log');
+const out = m => log.append(m + "\n");
+const f = document.createElement('iframe');
+f.src = '/studio/?dragtest=1'; f.width = 1400; f.height = 900;
+f.style.cssText = 'position:fixed;left:-9999px;top:0';
+document.body.appendChild(f);
+f.onload = async () => {
+  try{
+    const w = f.contentWindow, d = f.contentDocument;
+    await new Promise(r => setTimeout(r, 1800));
+    const S = w.__studio;
+    if(!S) return out('FAIL: studio not exposed');
+    const part = S.state.parts.find(p => p.comp === 'ringshot');
+    const card = S.state.cards.find(c => c.comp !== 'ringshot');
+    if(!part || !card) return out('FAIL: missing nodes');
+    out('part   : ' + part.comp);
+    out('card   : ' + card.id + ' holds "' + card.comp + '"  treatment ' + card.format + '/' + card.layout);
+    const before = card.format + '/' + card.layout + '/' + card.theme;
+    const pr = part.el.getBoundingClientRect(), cr = card.el.getBoundingClientRect();
+    const ev = (type, x, y) => part.el.dispatchEvent(new w.PointerEvent(type, {
+      bubbles:true, composed:true, clientX:x, clientY:y, pointerId:1, button:0, isPrimary:true }));
+    ev('pointerdown', pr.left + pr.width/2, pr.top + pr.height/2);
+    ev('pointermove', pr.left + pr.width/2 + 40, pr.top + pr.height/2 + 40);
+    d.elementFromPoint = () => card.el;
+    ev('pointermove', cr.left + cr.width/2, cr.top + cr.height/2);
+    ev('pointerup',   cr.left + cr.width/2, cr.top + cr.height/2);
+    await new Promise(r => setTimeout(r, 250));
+    const after = card.format + '/' + card.layout + '/' + card.theme;
+    out('after  : card holds "' + card.comp + '"  treatment ' + after);
+    out('part kept on canvas : ' + S.state.parts.includes(part));
+    out('treatment unchanged : ' + (before === after));
+    out(card.comp === 'ringshot' && before === after
+      ? 'PASS — the card took the subject and kept its treatment'
+      : 'FAIL — ' + (card.comp !== 'ringshot' ? 'card did not take the part' : 'treatment was overwritten'));
+  } catch(e){ out('ERROR: ' + e.message); }
+};
+</script>

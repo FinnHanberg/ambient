@@ -1,0 +1,20 @@
+<!doctype html><meta charset="utf-8"><title>explore</title>
+<style>html,body{margin:0}iframe{border:0;width:1500px;height:950px;display:block}</style>
+<iframe id="f" src="/studio/?v=1"></iframe>
+<script type="module">
+const f = document.getElementById('f');
+f.onload = async () => {
+  const w = f.contentWindow, d = f.contentDocument;
+  await new Promise(r => setTimeout(r, 1700));
+  const card = w.__studio.state.cards.find(c => c.comp);
+  const e = d.querySelector(`[data-id="${card.id}"]`);
+  e.dispatchEvent(new w.PointerEvent('pointerdown',{bubbles:true,button:0,pointerId:9}));
+  e.dispatchEvent(new w.PointerEvent('pointerup',{bubbles:true,button:0,pointerId:9}));
+  await new Promise(r => setTimeout(r, 350));
+  [...d.querySelectorAll('.acc-h')].find(h => h.textContent.includes('Explore'))?.click();
+  await new Promise(r => setTimeout(r, 500));
+  [...d.querySelectorAll('.ask-row .btn')].find(x => x.textContent.trim() === 'Layout')?.click();
+  await new Promise(r => setTimeout(r, 700));
+  document.title = 'ready';
+};
+</script>

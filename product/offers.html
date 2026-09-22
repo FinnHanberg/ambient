@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pass — offer sandbox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0A;--ground:#F4F4F4;--hair:rgba(10,10,10,.14);--mute:rgba(10,10,10,.52);
+  --faint:rgba(10,10,10,.34);--fill:rgba(10,10,10,.045)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ground);color:var(--ink);font-family:Geist,-apple-system,sans-serif;
+  font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:0 clamp(20px,5vw,56px)}
+.label{font-size:12px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;color:var(--faint)}
+header{padding:64px 0 44px;border-bottom:1px solid var(--hair)}
+h1{font-size:clamp(34px,5vw,54px);font-weight:500;letter-spacing:-.03em;margin-top:14px;max-width:20ch}
+.lede{margin-top:20px;max-width:64ch;color:var(--mute)}
+
+.strat{padding:56px 0;border-bottom:1px solid var(--hair)}
+.head{display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+h2{font-size:clamp(22px,3vw,32px);font-weight:500;letter-spacing:-.022em}
+.tag{font-size:11px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;
+  padding:4px 9px;border:1px solid var(--hair);border-radius:999px;color:var(--faint)}
+.grid{display:grid;gap:clamp(24px,4vw,48px);margin-top:28px}
+@media(min-width:940px){.grid{grid-template-columns:1fr 1fr}}
+.body p{color:var(--mute);font-size:15px;margin-bottom:12px}
+.body b{color:var(--ink);font-weight:500}
+.kv{margin-top:18px;border-top:1px solid var(--hair)}
+.kv div{display:grid;grid-template-columns:118px 1fr;gap:18px;padding:9px 0;
+  border-bottom:1px solid var(--hair);font-size:13.5px}
+.kv span:first-child{color:var(--faint)}
+.kv span:last-child{color:var(--mute)}
+.warn{margin-top:16px;padding:13px 15px;background:var(--fill);border-radius:8px;
+  font-size:13.5px;color:var(--mute)}
+.warn b{color:var(--ink);font-weight:500}
+
+/* ── offer UI specimens ─────────────────────── */
+.ui{background:#fff;border:1px solid var(--hair);border-radius:14px;padding:22px;align-self:start}
+.tiers{display:grid;gap:10px}
+.tier{border:1px solid var(--hair);border-radius:10px;padding:15px}
+.tier.pick{border-color:var(--ink);border-width:1.5px}
+.tier .t{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.tier .n{font-size:14px;font-weight:500}
+.tier .p{font-size:19px;font-weight:500;letter-spacing:-.02em}
+.tier .p small{font-size:12px;color:var(--faint);font-weight:400;letter-spacing:0}
+.tier ul{list-style:none;margin-top:10px;display:grid;gap:5px}
+.tier li{font-size:12.5px;color:var(--mute);padding-left:15px;position:relative}
+.tier li:before{content:"–";position:absolute;left:0;color:var(--faint)}
+.btn{display:block;width:100%;text-align:center;background:var(--ink);color:#fff;border:0;
+  border-radius:999px;padding:10px;font-size:13px;font-weight:500;margin-top:13px;
+  font-family:inherit;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--hair)}
+.note{font-size:11.5px;color:var(--faint);text-align:center;margin-top:9px}
+.code{background:#0F0F0F;color:rgba(255,255,255,.9);border-radius:10px;padding:14px 16px;
+  font-size:12.5px;line-height:1.7;overflow-x:auto;white-space:pre}
+.code .c{color:rgba(255,255,255,.4)}
+.meter{margin-top:12px}
+.bar{height:5px;border-radius:99px;background:var(--fill);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ink)}
+.row{display:flex;justify-content:space-between;font-size:12px;color:var(--mute);margin-top:7px}
+.seats{display:flex;align-items:center;gap:10px;margin-top:12px}
+.seats input{width:62px;padding:7px 9px;border:1px solid var(--hair);border-radius:7px;
+  font-family:inherit;font-size:14px;background:transparent;color:var(--ink)}
+.big{font-size:32px;font-weight:500;letter-spacing:-.025em;margin-top:6px}
+
+/* funnel */
+.funnel{display:grid;gap:1px;background:var(--hair);border:1px solid var(--hair);margin-top:28px}
+@media(min-width:820px){.funnel{grid-template-columns:repeat(5,1fr)}}
+.stage{background:var(--ground);padding:18px}
+.stage h4{font-size:14px;font-weight:500;margin-top:9px}
+.stage p{font-size:12.5px;color:var(--mute);margin-top:7px}
+.stage .m{font-size:11.5px;color:var(--faint);margin-top:9px}
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <p class="label">Pass · sandbox</p>
+  <h1>Nine ways to charge for this, and the one I'd pick.</h1>
+  <p class="lede">Each block is a real offer architecture from the indie software and
+    developer-tool space, applied to Pass with actual numbers. Conventions are cited where
+    they exist rather than invented. Read the failure mode on each — that's the part that
+    decides it.</p>
+</header>
+
+<!-- 01 -->
+<section class="strat wrap">
+  <div class="head"><span class="label">01</span><h2>The layered ladder</h2>
+    <span class="tag">2026 default</span></div>
+  <div class="grid">
+    <div class="body">
+      <p>The convention most indie Mac apps converged on: <b>a free tier with real value,
+        a cheap annual as the revenue driver, and a lifetime price as the anchor</b> at
+        roughly 3–4× the annual. The lifetime option exists mostly to make the annual look
+        reasonable; a minority take it, and those who do fund the runway.</p>
+      <p>Pass fits this unusually well because the free tier costs you nothing to serve —
+        the on-device model means no per-user inference bill.</p>
+      <div class="kv">
+        <div><span>Revenue/user</span><span>$29/yr, or $99 once</span></div>
+        <div><span>Your cost</span><span>$0 on free, $0 on BYOK</span></div>
+        <div><span>Needs</span><span>Licence keys, a store, updates</span></div>
+        <div><span>Benchmark</span><span>7%+ free→paid is top-decile devtools</span></div>
+      </div>
+      <div class="warn"><b>Failure mode:</b> the free tier has to be genuinely useful, not
+        crippled. Open core dies when the paywall looks arbitrary rather than mapping to
+        scale or risk.</div>
+    </div>
+    <div class="ui">
+      <div class="tiers">
+        <div class="tier"><div class="t"><span class="n">Free</span><span class="p">$0</span></div>
+          <ul><li>Unlimited passes</li><li>On-device model</li><li>Copy and paste export</li></ul></div>
+        <div class="tier pick"><div class="t"><span class="n">Pro</span>
+          <span class="p">$29<small>/year</small></span></div>
+          <ul><li>Everything in Free</li><li>Frontier model cleanup, bring your own key</li>
+            <li>Linear, GitHub and Jira export</li><li>Pass history and search</li></ul>
+          <button class="btn">Upgrade</button></div>
+        <div class="tier"><div class="t"><span class="n">Lifetime</span><span class="p">$99</span></div>
+          <ul><li>Pro, once, forever</li><li>All future updates</li></ul>
+          <button class="btn ghost">Buy once</button></div>
+      </div>
+      <p class="note">Annual billed yearly · 14-day refund, no questions</p>
+    </div>
+  </div>
+</section>
+
+<!-- 02 -->
+<section class="strat wrap">
+  <div class="head"><span class="label">02</span><h2>Open core — free on npm, paid on the desktop</h2>
+    <span class="tag">Dominant devtools model</span></div>
+  <div class="grid">
+    <div class="body">
+      <p>Publish the capture format, the CLI and the MCP server free on npm and Homebrew.
+        Charge for the Mac app — the part that needs a microphone, a cursor ring and a
+        review panel, and which nobody can clone in an afternoon.</p>
+      <p><b>The package is the distribution, not the product.</b> It goes where developers
+        already look, it gets starred, it gets into agent toolchains, and every install is
+        an advert for the GUI. This is why open core is the most common devtools model in
+        2026: the free layer buys reach that marketing can't.</p>
+      <div class="kv">
+        <div><span>Free</span><span>CLI, MCP server, format spec</span></div>
+        <div><span>Paid</span><span>The Mac app — $29/yr</span></div>
+        <div><span>Channel</span><span>npm · Homebrew · MCP registry</span></div>
+        <div><span>Signal</span><span>Installs and stars precede revenue</span></div>
+      </div>
+      <div class="warn"><b>Failure mode:</b> if the CLI can do the whole job, nobody pays.
+        The split has to be honest — the terminal cannot hold a cursor ring.</div>
+    </div>
+    <div class="ui">
+      <div class="code"><span class="c"># free, everywhere</span>
+npx @pass/mcp            <span class="c"># expose passes to any agent</span>
+brew install pass-cli    <span class="c"># read + export a pass</span>
+
+<span class="c"># the app that makes them</span>
+pass.app — $29/year</div>
+      <div class="kv" style="margin-top:16px">
+        <div><span>npm weekly</span><span>the top-of-funnel metric</span></div>
+        <div><span>GitHub stars</span><span>the credibility metric</span></div>
+        <div><span>App installs</span><span>the revenue metric</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 -->
+<section class="strat wrap">
+  <div class="head"><span class="label">03</span><h2>Flat licence, bring your own key</h2>
+    <span class="tag">Zero backend</span></div>
+  <div class="grid">
+    <div class="body">
+      <p>One price, no accounts, no server, no inference bill. The user pastes their own API
+        key or uses the on-device model. You ship a binary and a licence key and never think
+        about tokens again.</p>
+      <p>Margin is effectively 100% and there is no cost that scales with a power user —
+        the structural problem with every metered AI wrapper.</p>
+      <div class="kv">
+        <div><span>Price</span><span>$49 once</span></div>
+        <div><span>Your cost</span><span>$0 per user, forever</span></div>
+        <div><span>Infra</span><span>A licence key and a download</span></div>
+        <div><span>Tradeoff</span><span>No recurring revenue</span></div>
+      </div>
+      <div class="warn"><b>Failure mode:</b> one-time revenue stops while support doesn't.
+        The usual fix is paid major versions — v2 is a new purchase for existing owners.</div>
+    </div>
+    <div class="ui">
+      <p class="label">Pass</p>
+      <div class="big">$49</div>
+      <p style="font-size:13px;color:var(--mute);margin-top:8px">One payment. Yours forever.
+        Runs on your Mac with your own key, or free on device.</p>
+      <button class="btn" style="margin-top:16px">Buy Pass</button>
+      <p class="note">No account · No subscription · Nothing to cancel</p>
+      <div class="kv" style="margin-top:18px">
+        <div><span>Included</span><span>Every 1.x update</span></div>
+        <div><span>Devices</span><span>All your own Macs</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 -->
+<section class="strat wrap">
+  <div class="head"><span class="label">04</span><h2>Credits — you resell the inference</h2>
+    <span class="tag">Highest risk</span></div>
+  <div class="grid">
+    <div class="body">
+      <p>You hold the API key and sell packs of passes. Removes the key-pasting friction
+        entirely, which is real: onboarding a key is where most users drop.</p>
+      <p>But a pass with 20 crops costs about <b>$0.02</b> on Haiku, and heavy users are
+        exactly the ones who convert. You are now running a metered business with a proxy,
+        accounts, abuse protection and a billing stack — infrastructure, not an app.</p>
+      <div class="kv">
+        <div><span>Cost to serve</span><span>~$0.02 per pass with images</span></div>
+        <div><span>Pack price</span><span>$9 for 500 passes (~$10 margin)</span></div>
+        <div><span>Needs</span><span>Proxy, auth, metering, Stripe</span></div>
+        <div><span>Margin</span><span>Falls as usage rises</span></div>
+      </div>
+      <div class="warn"><b>Failure mode:</b> you are charging a second time for inference
+        the user already pays for in their coding agent. Competitors rationing hourly
+        allowances are a symptom of this model, not a feature of it.</div>
+    </div>
+    <div class="ui">
+      <p class="label">This month</p>
+      <div class="meter">
+        <div class="bar"><i style="width:38%"></i></div>
+        <div class="row"><span>190 of 500 passes</span><span>38%</span></div>
+      </div>
+      <div class="tiers" style="margin-top:20px">
+        <div class="tier"><div class="t"><span class="n">500 passes</span><span class="p">$9</span></div></div>
+        <div class="tier pick"><div class="t"><span class="n">2,000 passes</span><span class="p">$29</span></div>
+          <ul><li>Best value per pass</li></ul></div>
+        <div class="tier"><div class="t"><span class="n">Bring your own key</span><span class="p">Free</span></div>
+          <ul><li>Unlimited, billed by Anthropic</li></ul></div>
+      </div>
+      <button class="btn">Add credits</button>
+    </div>
+  </div>
+</section>
+
+<!-- 05 -->
+<section class="strat wrap">
+  <div class="head"><span class="label">05</span><h2>Seats — the pass becomes a team object</h2>
+    <span class="tag">Highest ceiling</span></div>
+  <div class="grid">
+    <div class="body">
+      <p>The single-player tool is the wedge; the business is the shared queue. A designer
+        records a pass, it lands in a team inbox, an engineer or an agent picks it up and
+        closes it. Now it competes with Linear and BugHerd rather than with dictation apps.</p>
+      <p>Seat pricing is the only model here where revenue grows without your costs growing
+        in step, and where churn is organisational rather than personal.</p>
+      <div class="kv">
+        <div><span>Price</span><span>$12 per seat / month</span></div>
+        <div><span>Expansion</span><span>Seats grow with the team</span></div>
+        <div><span>Needs</span><span>Accounts, sync, web app, SSO eventually</span></div>
+        <div><span>Benchmark</span><span>Under 3% monthly churn is healthy</span></div>
+      </div>
+      <div class="warn"><b>Failure mode:</b> this is a different company. Sync, permissions
+        and a web app are months of work, and you'd be entering an occupied market.</div>
+    </div>
+    <div class="ui">
+      <p class="label">Team</p>
+      <div class="seats"><input value="6"><span style="font-size:13px;color:var(--mute)">seats × $12/mo</span></div>
+      <div class="big">$72<small style="font-size:14px;color:var(--faint);font-weight:400">/month</small></div>
+      <div class="kv" style="margin-top:16px">
+        <div><span>Shared queue</span><span>Passes route to the repo owner</span></div>
+        <div><span>Agent access</span><span>MCP endpoint per workspace</span></div>
+        <div><span>Audit</span><span>Who said what, when, on which build</span></div>
+      </div>
+      <button class="btn">Start a workspace</button>
+      <p class="note">Free for the first two seats</p>
+    </div>
+  </div>
+</section>
+
+<!-- 06 -->
+<section class="strat wrap">
+  <div class="head"><span class="label">06</span><h2>The pass is the advertisement</h2>
+    <span class="tag">Your existing pattern</span></div>
+  <div class="grid">
+    <div class="body">
+      <p>Every pass can be published as a link — the notes, the ringed crops, the page it
+        was recorded on. You send it to a client or a contractor instead of a Loom. They see
+        the artifact and the tool at the same time.</p>
+      <p>This is the mechanism already documented in your own funnel research: the work is
+        simultaneously the product demo, the proof, and the ad. One act, four outputs. Here
+        the shared pass carries a quiet footer and the recipient is, by definition, someone
+        who receives design feedback for a living.</p>
+      <div class="kv">
+        <div><span>Free</span><span>Public pass links</span></div>
+        <div><span>Paid</span><span>Private links, custom domain, no footer</span></div>
+        <div><span>Mechanism</span><span>Distribution rides the work</span></div>
+        <div><span>Measure</span><span>Views per pass → installs per view</span></div>
+      </div>
+      <div class="warn"><b>Failure mode:</b> hosting means a backend and a privacy surface —
+        you would be publishing screenshots of people's unreleased work.</div>
+    </div>
+    <div class="ui">
+      <p class="label">Shared pass</p>
+      <p style="font-size:15px;font-weight:500;margin-top:8px">asset-supply.com — 7 notes</p>
+      <p style="font-size:12.5px;color:var(--mute);margin-top:6px">Recorded 20 Sep · Finn</p>
+      <div class="kv" style="margin-top:16px">
+        <div><span>Link</span><span>pass.to/a8f2c1</span></div>
+        <div><span>Visibility</span><span>Anyone with the link</span></div>
+        <div><span>Expires</span><span>30 days</span></div>
+      </div>
+      <button class="btn ghost" style="margin-top:14px">Copy link</button>
+      <p class="note">Recorded with Pass — free for Mac</p>
+    </div>
+  </div>
+</section>
+
+<!-- 07 -->
+<section class="strat wrap">
+  <div class="head"><span class="label">07</span><h2>Someone else's storefront</h2>
+    <span class="tag">Distribution, not pricing</span></div>
+  <div class="grid">
+    <div class="body">
+      <p>List on Setapp and let a subscription bundle of 270+ Mac apps do the selling. You
+        take a revenue share of usage rather than a price, and you inherit an audience that
+        is already paying for Mac software.</p>
+      <p>The same logic applies to a merchant of record — Polar, Paddle, Lemon Squeezy and
+        Gumroad all handle VAT, invoicing and licence delivery so you never register for tax
+        in twenty jurisdictions. For a first paid product this is the difference between
+        shipping this month and not shipping.</p>
+      <div class="kv">
+        <div><span>Setapp</span><span>Rev-share, zero marketing</span></div>
+        <div><span>MoR</span><span>Handles VAT, licences, refunds</span></div>
+        <div><span>Cost</span><span>~4–8% plus processing</span></div>
+        <div><span>Gets you</span><span>Legitimacy and a checkout, fast</span></div>
+      </div>
+      <div class="warn"><b>Failure mode:</b> you don't own the customer, and bundle revenue
+        per user is small. Good as a channel, bad as the whole plan.</div>
+    </div>
+    <div class="ui">
+      <div class="kv" style="margin-top:0;border-top:0">
+        <div><span>Polar</span><span>Built for devtools, low fee</span></div>
+        <div><span>Lemon Squeezy</span><span>Now Stripe-owned, mature</span></div>
+        <div><span>Paddle</span><span>Best for enterprise invoicing</span></div>
+        <div><span>Gumroad</span><span>Fastest to a first sale</span></div>
+        <div><span>Setapp</span><span>Curated bundle, rev-share</span></div>
+      </div>
+      <p class="note" style="margin-top:14px;text-align:left">All handle EU VAT as merchant
+        of record — which you, selling from Belgium, otherwise handle yourself.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 08 -->
+<section class="strat wrap">
+  <div class="head"><span class="label">08</span><h2>Free, with a tip jar</h2>
+    <span class="tag">Reputation play</span></div>
+  <div class="grid">
+    <div class="body">
+      <p>Give it away. No licence, no key, no tiers. Add a Sponsor button and ship the
+        source. You are not trying to make money from Pass — you are trying to be the
+        person who made Pass.</p>
+      <p>For a freelancer at your rate, one inbound engagement traced to the tool pays for
+        the entire build. The software is a portfolio piece with a download counter, and the
+        counter is the proof.</p>
+      <div class="kv">
+        <div><span>Revenue</span><span>Indirect — inbound work</span></div>
+        <div><span>Cost</span><span>Notarisation, $99/yr</span></div>
+        <div><span>Measure</span><span>Installs, stars, mentions, inbound</span></div>
+        <div><span>Fit</span><span>Strong, given a $20K engagement value</span></div>
+      </div>
+      <div class="warn"><b>Failure mode:</b> free tools generate support load with no
+        revenue to fund it. Cap it by shipping as-is and saying so plainly.</div>
+    </div>
+    <div class="ui">
+      <p class="label">Pass</p>
+      <div class="big">Free</div>
+      <p style="font-size:13px;color:var(--mute);margin-top:8px">Open source. No account, no
+        telemetry, no upsell. Built by a designer who got tired of writing tickets.</p>
+      <button class="btn" style="margin-top:16px">Download</button>
+      <button class="btn ghost" style="margin-top:8px">Sponsor</button>
+      <p class="note">2,140 installs · 380 stars</p>
+    </div>
+  </div>
+</section>
+
+<!-- 09 -->
+<section class="strat wrap">
+  <div class="head"><span class="label">09</span><h2>The tool is the lead magnet</h2>
+    <span class="tag">Your actual business</span></div>
+  <div class="grid">
+    <div class="body">
+      <p>Pass is free and unbranded as a product. What it sells is the practice behind it:
+        a designer who builds the instrument, not just the deliverable. The download page
+        carries one line about who made it and what he does.</p>
+      <p>Every user is a designer or a team doing UI review with AI agents — which is
+        precisely the buyer for an AI-native design engagement. The tool qualifies the lead
+        by existing.</p>
+      <div class="kv">
+        <div><span>Product revenue</span><span>$0 by design</span></div>
+        <div><span>Real offer</span><span>Design engineering, $20K</span></div>
+        <div><span>Conversion</span><span>Install → newsletter → enquiry</span></div>
+        <div><span>Compounds</span><span>Each pass shared is reach</span></div>
+      </div>
+      <div class="warn"><b>Failure mode:</b> the audience is developers, who buy tools, not
+        brand engagements. The bridge from install to enquiry has to be built deliberately —
+        it does not happen on its own.</div>
+    </div>
+    <div class="ui">
+      <p class="label">After your first pass</p>
+      <p style="font-size:15px;font-weight:500;margin-top:10px;line-height:1.35">You just
+        described seven changes in forty seconds.</p>
+      <p style="font-size:13px;color:var(--mute);margin-top:10px">Pass is free and always
+        will be. I build interface systems and the instruments that produce them — if that's
+        useful to your team, that's what I do for a living.</p>
+      <button class="btn ghost" style="margin-top:14px">See the practice</button>
+      <p class="note">Shown once, on the third completed pass</p>
+    </div>
+  </div>
+</section>
+
+<!-- funnel -->
+<section class="strat wrap">
+  <div class="head"><span class="label">Funnel</span><h2>Where a user actually drops</h2></div>
+  <p class="lede" style="margin-top:14px">Pricing is the last decision. The stages below are
+    where this specific product loses people, and each one has a measurable gate.</p>
+  <div class="funnel">
+    <div class="stage"><p class="label">01</p><h4>Arrive</h4>
+      <p>From an npm install, a shared pass, or a post. The demo has to read without sound.</p>
+      <p class="m">Gate: 8-second ring clip</p></div>
+    <div class="stage"><p class="label">02</p><h4>Install</h4>
+      <p>Three permissions, one of which silently breaks the hotkey. This is the real cliff.</p>
+      <p class="m">Gate: guided permissions</p></div>
+    <div class="stage"><p class="label">03</p><h4>First pass</h4>
+      <p>Activation is one completed pass with a correct ring. Nothing before it counts.</p>
+      <p class="m">Target: under 60 seconds</p></div>
+    <div class="stage"><p class="label">04</p><h4>Habit</h4>
+      <p>Three passes in a week. Below that, no pricing model saves it.</p>
+      <p class="m">Gate: it beats typing</p></div>
+    <div class="stage"><p class="label">05</p><h4>Pay</h4>
+      <p>Triggered by a limit that hurts — export targets or history, not a pass count.</p>
+      <p class="m">Top devtools: 7%+</p></div>
+  </div>
+  <div class="warn" style="max-width:70ch"><b>The one that matters:</b> stage 02. You have
+    personally hit every failure in it — a permission that looks granted but isn't, a
+    rebuild that silently revokes it, a hotkey that does nothing. No offer architecture
+    survives an install that appears broken.</div>
+</section>
+
+</body>
+</html>

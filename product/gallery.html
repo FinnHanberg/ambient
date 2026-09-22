@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Pass — gallery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0A;--ground:#F4F4F4;--hair:rgba(10,10,10,.14);--mute:rgba(10,10,10,.52);--faint:rgba(10,10,10,.34)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#fff;font-family:Geist,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+.slide{width:1270px;height:760px;background:var(--ground);color:var(--ink);
+  position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:center;
+  padding:64px 76px}
+.label{font-size:13px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;color:var(--faint)}
+h2{font-size:52px;line-height:1.02;font-weight:500;letter-spacing:-.03em;max-width:17ch;margin-top:16px}
+.slide>*{flex:0 0 auto}
+p.say{font-size:21px;color:var(--mute);margin-top:18px;max-width:52ch;line-height:1.45}
+img{display:block;max-width:100%}
+.center{align-items:center;text-align:center}
+.shot-wrap{margin-top:36px;display:flex;justify-content:center;min-height:0}
+.shot-wrap img{border-radius:14px;box-shadow:0 30px 70px rgba(0,0,0,.14)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:40px}
+.two figure{display:flex;flex-direction:column;gap:12px}
+.two img{border-radius:10px;border:1px solid var(--hair);height:300px;object-fit:cover;object-position:center}
+.two figcaption{font-size:15px;color:var(--mute)}
+.two b{font-weight:500;color:var(--ink)}
+.facts{margin-top:36px;border-top:1px solid var(--hair)}
+.fact{display:grid;grid-template-columns:260px 1fr;gap:28px;padding:16px 0;border-bottom:1px solid var(--hair);align-items:baseline}
+.fact span{font-size:13px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;color:var(--faint)}
+.fact p{font-size:17px;color:var(--mute)}
+.bleed{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#0A0A0A}
+.bleed img{width:100%;height:100%;object-fit:cover}
+.overlay{position:absolute;left:76px;bottom:64px;right:76px;z-index:2}
+.overlay p{font-size:32px;font-weight:500;letter-spacing:-.02em;color:#fff;max-width:22ch;line-height:1.1}
+.overlay span{font-size:13px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;color:rgba(255,255,255,.55)}
+.scrim{position:absolute;inset:0;z-index:1;background:linear-gradient(to top,rgba(0,0,0,.85) 0%,rgba(0,0,0,.45) 18%,rgba(0,0,0,0) 40%)}
+pre{margin-top:32px;font-family:Geist,sans-serif;font-size:17px;line-height:1.72;color:var(--mute);white-space:pre-wrap}
+pre b{font-weight:500;color:var(--ink)}
+.dark{background:#0A0A0A;color:#fff}
+.dark .label{color:rgba(255,255,255,.4)}
+.dark h2{color:#fff}
+.dark p.say{color:rgba(255,255,255,.62)}
+</style></head><body>
+
+<!-- 1 — the output, first -->
+<section class="slide center">
+  <p class="label">A finished pass</p>
+  <h2 style="max-width:22ch">Talk through the page. Get the brief.</h2>
+  <div class="shot-wrap"><img src="assets/review.png" style="width:600px"></div>
+</section>
+
+<!-- 2 — the ring -->
+<section class="slide" style="padding:0">
+  <div class="bleed" style="background:#F4F4F4"><img src="assets/ring-close.png"></div>
+  <div class="scrim"></div>
+  <div class="overlay">
+    <span>Pointing</span>
+    <p>“Increase the opacity of <em>this</em>.”</p>
+  </div>
+</section>
+
+<!-- 3 — one hold, many notes -->
+<section class="slide center">
+  <p class="label">One hold</p>
+  <h2 style="max-width:20ch">A pass is one take, not forty tickets.</h2>
+  <p class="say" style="margin-left:auto;margin-right:auto">Every pause closes a note and it keeps listening.</p>
+  <div class="shot-wrap"><img src="assets/hud-hearing.png" style="width:760px"></div>
+</section>
+
+<!-- 4 — two pointing words -->
+<section class="slide">
+  <p class="label">Per word</p>
+  <h2>“Move this above that” marks two elements.</h2>
+  <div class="two">
+    <figure><img src="assets/ring-a.png"><figcaption><b>this</b> — resolved at 0.9s</figcaption></figure>
+    <figure><img src="assets/ring-b.png"><figcaption><b>that</b> — resolved at 1.4s</figcaption></figure>
+  </div>
+</section>
+
+<!-- 5 — the output format -->
+<section class="slide">
+  <p class="label">What you get</p>
+  <h2 style="max-width:20ch">Plain text, with the pixels attached.</h2>
+<pre><b>Feedback pass — 3 notes from asset-supply.com</b>
+
+1. The hero image is too dominant — bring it down so the headline leads.
+   screenshot: ~/.ambient/shots/8AFCC5BE-1.png
+   context: https://asset-supply.com/ · image · “hero-01”
+
+2. Increase the opacity of this, it's disappearing on white.
+   screenshot: ~/.ambient/shots/B802670C-1.png
+   context: https://asset-supply.com/ · link · “Asset Supply©”</pre>
+</section>
+
+<!-- 6 — on device -->
+<section class="slide dark">
+  <p class="label">On device</p>
+  <h2>Nothing leaves the machine unless you send it.</h2>
+  <div class="facts" style="border-color:rgba(255,255,255,.16)">
+    <div class="fact" style="border-color:rgba(255,255,255,.16)"><span style="color:rgba(255,255,255,.4)">Transcription</span><p style="color:rgba(255,255,255,.62)">System speech model, on device. No audio uploaded.</p></div>
+    <div class="fact" style="border-color:rgba(255,255,255,.16)"><span style="color:rgba(255,255,255,.4)">Screen</span><p style="color:rgba(255,255,255,.62)">Frames held in memory while you hold, discarded after.</p></div>
+    <div class="fact" style="border-color:rgba(255,255,255,.16)"><span style="color:rgba(255,255,255,.4)">Password fields</span><p style="color:rgba(255,255,255,.62)">Capture halts on secure input, automatically.</p></div>
+    <div class="fact" style="border-color:rgba(255,255,255,.16)"><span style="color:rgba(255,255,255,.4)">Network</span><p style="color:rgba(255,255,255,.62)">None required. It never sends on your behalf.</p></div>
+  </div>
+</section>
+
+</body></html>

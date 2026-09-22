@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pass — hero graphic sandbox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0A;--bg:#fff;--panel:#FAFAFA;--line:rgba(10,10,10,.09);--line2:rgba(10,10,10,.14);
+  --mute:rgba(10,10,10,.50);--faint:rgba(10,10,10,.32)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:Geist,-apple-system,sans-serif;font-size:15px;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 90px}
+h1{font-size:26px;font-weight:500;letter-spacing:-.02em}
+.note{color:var(--mute);font-size:14px;margin-top:8px;max-width:64ch}
+.label{font-size:11.5px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;color:var(--faint)}
+
+.grid{display:grid;gap:16px;margin-top:32px}
+@media(min-width:900px){.grid{grid-template-columns:1fr 1fr}}
+.demo{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--bg)}
+.demo header{display:flex;align-items:baseline;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.demo header b{font-size:14px;font-weight:500}
+.demo header .sp{flex:1}
+.demo header button{border:1px solid var(--line2);background:var(--bg);border-radius:999px;padding:4px 11px;
+  font:inherit;font-size:11.5px;color:var(--mute);cursor:pointer}
+.demo header button:hover{background:var(--panel)}
+.demo .body{height:330px;background:var(--panel);position:relative;overflow:hidden}
+.demo footer{padding:12px 16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--mute)}
+
+/* ── mock browser page used by several demos ── */
+.page{position:absolute;inset:18px;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.page .nav{display:flex;align-items:center;gap:14px;padding:13px 16px;border-bottom:1px solid var(--line)}
+.page .logo{width:22px;height:22px;border-radius:999px;border:1.5px solid var(--ink)}
+.page .brandtxt{font-size:12.5px;font-weight:500}
+.page .nav a{font-size:12px;color:var(--mute);text-decoration:none}
+.page .nav .sp{flex:1}
+.page .hero{padding:26px 16px 0;text-align:center}
+.page .hero .h{height:15px;border-radius:4px;background:var(--ink);opacity:.86;margin:0 auto;width:62%}
+.page .hero .h.s{height:8px;opacity:.16;width:44%;margin-top:11px}
+.page .pills{display:flex;gap:8px;justify-content:center;margin-top:18px}
+.page .pill{height:26px;border-radius:999px;background:var(--ink);width:88px}
+.page .pill.o{background:transparent;border:1px solid var(--line2);width:104px}
+.page .card{margin:20px 16px 0;height:60px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+
+/* cursor + ring */
+.cur{position:absolute;width:10px;height:10px;border-radius:999px;background:var(--ink);
+  transform:translate(-50%,-50%);pointer-events:none;z-index:6;transition:none}
+.ring{position:absolute;width:38px;height:38px;border-radius:999px;border:2px solid var(--ink);
+  transform:translate(-50%,-50%) scale(.4);opacity:0;pointer-events:none;z-index:5;
+  box-shadow:0 0 0 3px rgba(255,255,255,.9)}
+.ring.on{opacity:1;transform:translate(-50%,-50%) scale(1);
+  transition:opacity .18s ease,transform .32s cubic-bezier(.16,1,.3,1)}
+
+/* transcript line */
+.say{position:absolute;left:18px;right:18px;bottom:14px;z-index:7;display:flex;align-items:center;gap:9px}
+.say .dot{width:6px;height:6px;border-radius:999px;background:var(--ink);opacity:.5;flex:0 0 auto}
+.say .txt{font-size:13px;color:var(--ink);background:rgba(255,255,255,.94);border:1px solid var(--line);
+  border-radius:999px;padding:6px 13px;white-space:nowrap;overflow:hidden}
+.say .txt i{font-style:normal;font-weight:500;background:rgba(10,10,10,.09);border-radius:3px;padding:0 3px}
+
+/* ── panel (review / HUD) ── */
+.panel{position:absolute;left:18px;right:18px;top:18px;bottom:18px;background:#0E0E0E;border-radius:12px;
+  overflow:hidden;display:flex;flex-direction:column}
+.panel .ph{display:flex;align-items:baseline;gap:9px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.1)}
+.panel .ph b{color:#fff;font-size:13px;font-weight:600}
+.panel .ph span{color:rgba(255,255,255,.4);font-size:11.5px}
+.rows{flex:1;overflow:hidden}
+.nrow{display:flex;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.07);
+  opacity:0;transform:translateY(9px)}
+.nrow.in{opacity:1;transform:none;transition:opacity .4s ease,transform .45s cubic-bezier(.16,1,.3,1)}
+.nrow .idx{color:rgba(255,255,255,.35);font-size:10.5px;width:10px;flex:0 0 auto;padding-top:2px}
+.nrow .th{width:54px;height:34px;border-radius:4px;background:#fff;opacity:.9;flex:0 0 auto;
+  transform:scale(.9);transition:transform .45s cubic-bezier(.16,1,.3,1)}
+.nrow.in .th{transform:none}
+.nrow .tx{min-width:0}
+.nrow .tx b{display:block;color:rgba(255,255,255,.95);font-size:12px;font-weight:400;line-height:1.35}
+.nrow .tx span{display:block;color:rgba(255,255,255,.35);font-size:10.5px;margin-top:3px}
+.panel .pf{display:flex;gap:7px;padding:11px 14px;border-top:1px solid rgba(255,255,255,.1);
+  opacity:0;transition:opacity .4s ease}
+.panel .pf.in{opacity:1}
+.panel .pf span{font-size:11.5px;border-radius:999px;padding:5px 12px;background:rgba(255,255,255,.14);color:#fff}
+.panel .pf span.g{background:transparent;border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.6)}
+
+/* HUD */
+.hud{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);width:80%;background:#0E0E0E;
+  border-radius:13px;padding:14px 16px;display:flex;flex-direction:column;gap:11px}
+.hud .top{display:flex;align-items:center;gap:11px}
+.wave{display:flex;align-items:center;gap:3px;height:18px}
+.wave i{width:2.5px;border-radius:2px;background:rgba(255,255,255,.8);height:3px}
+.hud .st{font-size:10.5px;font-weight:500;letter-spacing:.09em;color:rgba(255,255,255,.45)}
+.hud .line{color:#fff;font-size:14px;min-height:19px}
+.hud .chip{align-self:flex-start;display:flex;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.14);
+  border-radius:999px;padding:4px 10px;font-size:11px;color:rgba(255,255,255,.55)}
+.hud .chip i{width:6px;height:6px;border-radius:999px;border:1px solid rgba(255,255,255,.45)}
+
+/* interactive hint */
+.hint{position:absolute;left:0;right:0;top:0;text-align:center;font-size:11.5px;color:var(--faint);
+  padding:6px;pointer-events:none;z-index:8}
+</style></head><body>
+<div class="wrap">
+  <p class="label">Sandbox</p>
+  <h1>Landing graphic — live concepts</h1>
+  <p class="note">Five candidates for the hero. All are real DOM, monochrome, and driven by state rather
+    than a looping clock. Pick one and it replaces the static screenshot on the landing page.</p>
+
+  <div class="grid">
+
+    <!-- A -->
+    <div class="demo" id="a">
+      <header><b>A — The pass assembles</b><span class="sp"></span><button data-replay="a">Replay</button></header>
+      <div class="body">
+        <div class="panel">
+          <div class="ph"><b><span class="cnt">0</span> notes</b><span>asset-supply.com</span></div>
+          <div class="rows"></div>
+          <div class="pf"><span>Copy</span><span class="g">Paste into Claude</span></div>
+        </div>
+      </div>
+      <footer>Output-led. The thing you get, building itself.</footer>
+    </div>
+
+    <!-- B -->
+    <div class="demo" id="b">
+      <header><b>B — The ring lands</b><span class="sp"></span><button data-replay="b">Replay</button></header>
+      <div class="body">
+        <div class="page">
+          <div class="nav"><span class="logo" data-t="the logo"></span><span class="brandtxt">Asset Supply©</span>
+            <span class="sp"></span><a data-t="Home">Home</a><a data-t="Catalog">Catalog</a><a data-t="Contact">Contact</a></div>
+          <div class="hero"><div class="h"></div><div class="h s"></div>
+            <div class="pills"><span class="pill" data-t="Free Assets"></span><span class="pill o" data-t="83% Off"></span></div></div>
+        </div>
+        <div class="ring"></div><div class="cur"></div>
+        <div class="say"><span class="dot"></span><span class="txt"></span></div>
+      </div>
+      <footer>The mechanic, in one gesture: the ring lands on the word.</footer>
+    </div>
+
+    <!-- C -->
+    <div class="demo" id="c">
+      <header><b>C — Live binding (interactive)</b><span class="sp"></span></header>
+      <div class="body">
+        <div class="page">
+          <div class="nav"><span class="logo" data-t="link · “Asset Supply©”"></span><span class="brandtxt">Asset Supply©</span>
+            <span class="sp"></span><a data-t="link · “Home”">Home</a><a data-t="link · “Catalog”">Catalog</a><a data-t="link · “Contact”">Contact</a></div>
+          <div class="hero"><div class="h" data-t="heading · “The Art of UX/UI”"></div><div class="h s" data-t="text · subheading"></div>
+            <div class="pills"><span class="pill" data-t="button · “Free Assets”"></span><span class="pill o" data-t="button · “83% Off”"></span></div></div>
+          <div class="card" data-t="image · “hero-01”"></div>
+        </div>
+        <div class="ring"></div>
+        <div class="say"><span class="dot"></span><span class="txt">move your cursor over the page</span></div>
+        <p class="hint">Your cursor — the binding updates per element</p>
+      </div>
+      <footer>Proves it by letting them do it. No loop to wait for.</footer>
+    </div>
+
+    <!-- D -->
+    <div class="demo" id="d">
+      <header><b>D — Two pointing words</b><span class="sp"></span><button data-replay="d">Replay</button></header>
+      <div class="body">
+        <div class="page">
+          <div class="nav"><span class="logo"></span><span class="brandtxt">Asset Supply©</span>
+            <span class="sp"></span><a>Home</a><a>Catalog</a><a>Contact</a></div>
+          <div class="hero"><div class="h" id="d-h"></div><div class="h s"></div>
+            <div class="pills"><span class="pill" id="d-p"></span><span class="pill o"></span></div></div>
+        </div>
+        <div class="ring r1"></div><div class="ring r2"></div><div class="cur"></div>
+        <div class="say"><span class="dot"></span><span class="txt"></span></div>
+      </div>
+      <footer>The differentiator: two rings, two instants, one sentence.</footer>
+    </div>
+
+    <!-- E -->
+    <div class="demo" id="e">
+      <header><b>E — The panel, mid-pass</b><span class="sp"></span><button data-replay="e">Replay</button></header>
+      <div class="body">
+        <div class="page" style="inset:18px 18px 92px"><div class="nav"><span class="logo"></span>
+          <span class="brandtxt">Asset Supply©</span><span class="sp"></span><a>Home</a><a>Catalog</a></div>
+          <div class="hero"><div class="h"></div><div class="h s"></div></div></div>
+        <div class="hud">
+          <div class="top"><span class="wave"><i></i><i></i><i></i><i></i><i></i></span>
+            <span class="st">LISTENING · <span class="cnt">0</span></span></div>
+          <div class="line"></div>
+          <div class="chip"><i></i><span class="bind">Asset Supply© · nav</span></div>
+        </div>
+      </div>
+      <footer>The instrument itself, alive. Waveform is damped state, not a clock.</footer>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ---------- helpers ---------- */
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const centre = (el, host) => {
+  const a = el.getBoundingClientRect(), b = host.getBoundingClientRect();
+  return { x: a.left - b.left + a.width/2, y: a.top - b.top + a.height/2 };
+};
+// type a string, marking one word as the pointing word
+async function type(node, text, mark, onMark){
+  node.innerHTML = ''; let out = '';
+  const words = text.split(' ');
+  for (let i=0;i<words.length;i++){
+    const w = words[i];
+    const isMark = mark !== undefined && i === mark;
+    out += (i?' ':'') + (isMark ? `<i>${w}</i>` : w);
+    node.innerHTML = out;
+    if (isMark && onMark) onMark();
+    await wait(isMark ? 260 : 95 + Math.random()*70);
+  }
+}
+// eased cursor travel — position is state, not a CSS loop
+async function travel(cur, from, to, ms){
+  const t0 = performance.now();
+  return new Promise(done => {
+    (function step(now){
+      const k = Math.min(1, (now - t0)/ms);
+      const e = k<.5 ? 4*k*k*k : 1-Math.pow(-2*k+2,3)/2;
+      cur.style.left = (from.x + (to.x-from.x)*e) + 'px';
+      cur.style.top  = (from.y + (to.y-from.y)*e) + 'px';
+      k<1 ? requestAnimationFrame(step) : done();
+    })(t0);
+  });
+}
+const NOTES = [
+  ['Increase the opacity of this — it disappears on white.', 'link · “Asset Supply©”'],
+  ['The hero is too dominant; let the headline lead.',       'image · “hero-01”'],
+  ['Fix the spacing around this button.',                    'button · “Account”']
+];
+
+/* ---------- A: the pass assembles ---------- */
+async function runA(){
+  const d = $('#a'), rows = $('.rows', d), cnt = $('.cnt', d), pf = $('.pf', d);
+  rows.innerHTML = ''; cnt.textContent = '0'; pf.classList.remove('in');
+  await wait(400);
+  for (let i=0;i<NOTES.length;i++){
+    const r = document.createElement('div');
+    r.className = 'nrow';
+    r.innerHTML = `<span class="idx">${i+1}</span><span class="th"></span>
+      <span class="tx"><b>${NOTES[i][0]}</b><span>${NOTES[i][1]}</span></span>`;
+    rows.appendChild(r);
+    requestAnimationFrame(()=>r.classList.add('in'));
+    cnt.textContent = i+1;
+    await wait(820);
+  }
+  pf.classList.add('in');
+  await wait(2600); runA();
+}
+
+/* ---------- B: the ring lands ---------- */
+async function runB(){
+  const d = $('#b'), body = $('.body', d), cur = $('.cur', d), ring = $('.ring', d), txt = $('.txt', d);
+  const target = $('.logo', d);
+  ring.classList.remove('on'); txt.innerHTML = '';
+  const start = { x: 40, y: 250 };
+  cur.style.left = start.x+'px'; cur.style.top = start.y+'px';
+  await wait(500);
+  const to = centre(target, body);
+  await travel(cur, start, to, 900);
+  await wait(200);
+  await type(txt, 'increase the opacity of this', 4, () => {
+    ring.style.left = to.x+'px'; ring.style.top = to.y+'px';
+    ring.classList.add('on');
+  });
+  await wait(2200); runB();
+}
+
+/* ---------- C: live binding, driven by the real cursor ---------- */
+(function initC(){
+  const d = $('#c'), body = $('.body', d), ring = $('.ring', d), txt = $('.txt', d);
+  const targets = $$('[data-t]', d);
+  body.addEventListener('mousemove', e => {
+    const b = body.getBoundingClientRect();
+    const hit = targets.find(t => {
+      const r = t.getBoundingClientRect();
+      return e.clientX>=r.left && e.clientX<=r.right && e.clientY>=r.top && e.clientY<=r.bottom;
+    });
+    if (!hit){ ring.classList.remove('on'); txt.textContent = 'move your cursor over the page'; return; }
+    const c = centre(hit, body);
+    ring.style.left = c.x+'px'; ring.style.top = c.y+'px';
+    ring.classList.add('on');
+    txt.textContent = hit.dataset.t;
+  });
+  body.addEventListener('mouseleave', () => {
+    ring.classList.remove('on'); txt.textContent = 'move your cursor over the page';
+  });
+})();
+
+/* ---------- D: two pointing words ---------- */
+async function runD(){
+  const d = $('#d'), body = $('.body', d), cur = $('.cur', d), txt = $('.txt', d);
+  const r1 = $('.r1', d), r2 = $('.r2', d);
+  r1.classList.remove('on'); r2.classList.remove('on'); txt.innerHTML = '';
+  const a = centre($('#d-p'), body), b = centre($('#d-h'), body);
+  const start = { x: 40, y: 260 };
+  cur.style.left = start.x+'px'; cur.style.top = start.y+'px';
+  await wait(450);
+  await travel(cur, start, a, 700);
+  const words = ['move','this','above','that'];
+  txt.innerHTML = '';
+  for (let i=0;i<words.length;i++){
+    const mark = i===1 || i===3;
+    txt.innerHTML = words.slice(0,i+1).map((w,j)=> (j===1||j===3) ? `<i>${w}</i>` : w).join(' ');
+    if (i===1){ r1.style.left=a.x+'px'; r1.style.top=a.y+'px'; r1.classList.add('on'); }
+    if (i===2){ travel(cur, a, b, 520); }
+    if (i===3){ r2.style.left=b.x+'px'; r2.style.top=b.y+'px'; r2.classList.add('on'); }
+    await wait(i===1||i===3 ? 520 : 420);
+  }
+  await wait(2400); runD();
+}
+
+/* ---------- E: the panel, mid-pass ---------- */
+async function runE(){
+  const d = $('#e'), line = $('.line', d), cnt = $('.cnt', d), bind = $('.bind', d);
+  const bars = $$('.wave i', d);
+  // damped amplitude — motion tracks a state variable, never a clock
+  let amp = 0, target = 0;
+  if (!d.dataset.wave){
+    d.dataset.wave = '1';
+    (function tick(){
+      target += (Math.random()-.5)*0.5; target = Math.max(0, Math.min(1, target));
+      amp += (target - amp) * 0.12;
+      bars.forEach((b,i)=>{
+        const w = [0.45,0.8,1,0.72,0.4][i];
+        b.style.height = (3 + amp*15*w).toFixed(1) + 'px';
+      });
+      requestAnimationFrame(tick);
+    })();
+  }
+  const script = [
+    ['increase the opacity of this', 'link · “Asset Supply©”'],
+    ['the hero is too dominant',      'image · “hero-01”'],
+    ['fix the spacing around this',   'button · “Account”']
+  ];
+  cnt.textContent = '0'; line.textContent = '';
+  for (let i=0;i<script.length;i++){
+    bind.textContent = script[i][1];
+    await type(line, script[i][0]);
+    cnt.textContent = i+1;
+    await wait(700);
+  }
+  await wait(1500); runE();
+}
+
+/* ---------- boot ---------- */
+runA(); runB(); runD(); runE();
+$$('[data-replay]').forEach(btn => btn.addEventListener('click', () => {
+  ({a:runA, b:runB, d:runD, e:runE})[btn.dataset.replay]();
+}));
+</script>
+</body></html>
