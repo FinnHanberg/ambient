@@ -51,6 +51,10 @@ final class Listener {
     private var analyzerFormat: AVAudioFormat?
     private var audioFormat: AVAudioFormat?
 
+    /// Bumped on every prepare so a stale results loop from a dead pipeline
+    /// cannot write into the live one.
+    private var generation = 0
+    private var rebuilding = false
     private var engaged = false
     private var engagedAt = Date()
     /// Audio time only advances while engaged, so it cannot be compared to wall
@@ -63,6 +67,8 @@ final class Listener {
     // MARK: - Setup
 
     func prepare() async {
+        generation += 1
+        let gen = generation
         let locale = Locale(identifier: "en-US")
         let t = SpeechTranscriber(locale: locale,
                                   transcriptionOptions: [],
@@ -96,7 +102,7 @@ final class Listener {
             // reached ready, and every engage silently bailed.
             Task { try? await a.start(inputSequence: stream) }
 
-            consume(t)
+            consume(t, gen)
             try configureAudio()
             state = .ready
         } catch {
@@ -104,11 +110,12 @@ final class Listener {
         }
     }
 
-    private func consume(_ t: SpeechTranscriber) {
+    private func consume(_ t: SpeechTranscriber, _ gen: Int) {
         Task { [weak self] in
+            var reason = "results stream closed"
             do {
                 for try await result in t.results {
-                    guard let self else { return }
+                    guard let self, gen == self.generation else { return }
                     if result.isFinal {
                         self.absorbFinal(result.text)
                     } else {
@@ -116,9 +123,38 @@ final class Listener {
                     }
                 }
             } catch {
-                await MainActor.run { self?.state = .failed(self?.short(error) ?? "transcription stopped") }
+                reason = self?.short(error) ?? "transcription stopped"
             }
+            // Falling out of this loop — by error *or* by the stream simply
+            // ending — used to leave a listener that still said "ready",
+            // still opened the microphone, and transcribed nothing. That is
+            // the "it stops working until I restart it" bug.
+            await self?.pipelineEnded(gen, reason: reason)
         }
+    }
+
+    /// Rebuild rather than sit there looking healthy.
+    private func pipelineEnded(_ gen: Int, reason: String) async {
+        guard gen == generation, !rebuilding else { return }
+        Log.say("listener · pipeline ended (\(reason)) — rebuilding")
+        rebuilding = true
+        engaged = false
+        tap.setFeeding(false)
+        closeMicrophone()
+        analyzer = nil
+        transcriber = nil
+        feed?.finish()
+        feed = nil
+        await prepare()
+        rebuilding = false
+    }
+
+    /// Called on wake and whenever something looks stale. Cheap when idle,
+    /// skipped mid-pass.
+    func refresh() async {
+        guard !engaged, !rebuilding else { return }
+        Log.say("listener · refreshing")
+        await pipelineEnded(generation, reason: "refresh requested")
     }
 
     // MARK: - Engagement
@@ -126,7 +162,18 @@ final class Listener {
     /// Audio is only fed to the analyzer while engaged. Releasing the keys
     /// genuinely stops transcription — it is not listening in the background.
     func engage() {
-        guard case .ready = state, !engaged else { return }
+        guard !engaged else { return }
+        guard case .ready = state else {
+            // Never silently refuse. A tap that does nothing is the worst
+            // possible response to a dead pipeline.
+            Log.say("engage · not ready (\(state)) — rebuilding first")
+            Task { [weak self] in
+                guard let self else { return }
+                await self.pipelineEnded(self.generation, reason: "engage while not ready")
+                if case .ready = self.state, !self.engaged { self.engage() }
+            }
+            return
+        }
         engaged = true
         openMicrophone()
         tap.setFeeding(true)
@@ -270,7 +317,7 @@ final class Listener {
 
     enum Err: Error { case msg(String) }
 
-    private func short(_ e: Error) -> String {
+    nonisolated func short(_ e: Error) -> String {
         if case Err.msg(let m) = e { return m }
         let ns = e as NSError
         return "\(ns.localizedDescription) (\(ns.domain) \(ns.code))"

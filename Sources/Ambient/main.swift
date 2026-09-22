@@ -51,9 +51,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ListenerDelegate, NSMe
         // Ask for both up front, at launch, together. Deferring the screen
         // request until after the model check meant it could never fire on a
         // machine where something earlier returned first.
-        if !Pointer.axTrusted { Pointer.requestAX() }
-        if !Shot.permitted { _ = Shot.requestPermission() }
+        if !Pointer.axTrusted, !UserDefaults.standard.bool(forKey: "ambient.askedAX") {
+            UserDefaults.standard.set(true, forKey: "ambient.askedAX")
+            Pointer.requestAX()
+        }
+        if !Shot.permitted, !UserDefaults.standard.bool(forKey: "ambient.askedScreen") {
+            UserDefaults.standard.set(true, forKey: "ambient.askedScreen")
+            _ = Shot.requestPermission()
+        }
         watchPermissions()
+        NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in await self?.listener.refresh() }
+        }
         Task { await Updates.shared.check() }
         hotkeys()
         observe()
@@ -82,7 +92,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ListenerDelegate, NSMe
     private var sawAX = Pointer.axTrusted
 
     private func watchPermissions() {
-        let t = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
+        let t = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] t in
             Task { @MainActor in
                 guard let self else { return }
                 let screen = Shot.permitted
@@ -98,6 +108,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ListenerDelegate, NSMe
                     Log.say("permissions · screenRecording -> \(screen)")
                     if screen { self.restartForScreenAccess() }
                 }
+                // Once everything is granted there is nothing left to watch.
+                if screen, ax { t.invalidate() }
             }
         }
         RunLoop.main.add(t, forMode: .common)
@@ -792,6 +804,30 @@ if args.contains("--selftest") {
     }
     NSApplication.shared.run()
 }
+if args.contains("--recover") {
+    // Proves the listener rebuilds itself instead of sitting there looking
+    // healthy — the "it stops working until I restart it" bug.
+    _ = NSApplication.shared
+    MainActor.assumeIsolated {
+        let l = Listener()
+        Task {
+            await l.prepare()
+            guard case .ready = l.state else { print("FAILED to prepare: \(l.state)"); exit(1) }
+            print("1. prepared            → \(l.state)")
+            for i in 1...3 {
+                await l.refresh()
+                guard case .ready = l.state else {
+                    print("BROKE after rebuild \(i): \(l.state)"); exit(2)
+                }
+                print("\(i + 1). rebuilt (cycle \(i))  → \(l.state)")
+            }
+            print("RECOVERS — three teardown/rebuild cycles, still ready")
+            exit(0)
+        }
+    }
+    NSApplication.shared.run()
+}
+
 if args.contains("--check") {
     // Proves the transcription pipeline reaches ready — model installed, audio
     // running — without anyone having to speak.
