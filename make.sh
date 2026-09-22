@@ -11,6 +11,7 @@ swift build -c release --scratch-path "$SCRATCH"
 BIN="$SCRATCH/release"
 if [[ ! -x "$BIN/Ambient" ]]; then echo "build failed: no binary at $BIN"; exit 1; fi
 
+VERSION="${1:-0.1}"
 APP="Ambient.app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
@@ -27,8 +28,8 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>CFBundleExecutable</key><string>Ambient</string>
   <key>CFBundleIdentifier</key><string>com.hansonmethod.ambient</string>
   <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleShortVersionString</key><string>0.2</string>
-  <key>CFBundleVersion</key><string>1</string>
+  <key>CFBundleShortVersionString</key><string>__VERSION__</string>
+  <key>CFBundleVersion</key><string>__VERSION__</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
   <key>LSUIElement</key><true/>
   <key>NSMicrophoneUsageDescription</key>
@@ -48,7 +49,8 @@ PLIST
 # perfectly well. Trust governs verification, not signing.
 IDENTITY=$(security find-identity -p codesigning 2>/dev/null | grep -o '"Ambient Dev"' | head -1 | tr -d '"')
 if [[ -n "$IDENTITY" ]]; then
-  codesign --force --sign "$IDENTITY" --timestamp=none "$APP" >/dev/null 2>&1 \
+  /usr/bin/sed -i '' "s|__VERSION__|$VERSION|g" "$APP/Contents/Info.plist"
+codesign --force --sign "$IDENTITY" --timestamp=none "$APP" >/dev/null 2>&1 \
     && echo "signed with $IDENTITY (permissions persist)" \
     || codesign --force --sign - --timestamp=none "$APP" >/dev/null 2>&1
 else
@@ -60,4 +62,11 @@ fi
 # was rewritten a moment ago can be evaluated against the old signature, and
 # the app comes up with every permission missing.
 sleep 1
-echo "built $PWD/$APP"
+# Anything that edits the bundle after signing invalidates the seal, and macOS
+# then revokes every permission the app had. Never ship past this check.
+if ! codesign --verify --deep --strict "$APP" 2>/dev/null; then
+  echo "SIGNATURE INVALID — something modified the bundle after signing"
+  codesign --verify --deep --strict "$APP"
+  exit 1
+fi
+echo "built $PWD/$APP  (signature verified)"

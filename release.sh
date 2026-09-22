@@ -16,10 +16,9 @@ DEV_ID=$(security find-identity -v -p codesigning 2>/dev/null \
   | grep -o '"Developer ID Application: [^"]*"' | head -1 | tr -d '"')
 
 echo "── building $VERSION"
-/usr/bin/sed -i '' "s|<key>CFBundleShortVersionString</key><string>[^<]*</string>|<key>CFBundleShortVersionString</key><string>$VERSION</string>|" make.sh 2>/dev/null || true
-./make.sh >/dev/null
-/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" Ambient.app/Contents/Info.plist
-/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSION" Ambient.app/Contents/Info.plist
+# The version goes in before signing. Stamping it afterwards invalidated the
+# signature, and macOS revoked microphone, speech and screen access every time.
+./make.sh "$VERSION" >/dev/null
 
 if [[ -z "$DEV_ID" ]]; then
   cat <<'MSG'
@@ -48,6 +47,10 @@ else
   codesign --force --deep --options runtime --timestamp \
     --sign "$DEV_ID" Ambient.app
   SIGNED=yes
+fi
+
+if ! codesign --verify --deep --strict Ambient.app 2>/dev/null; then
+  echo "── STOP: signature does not verify; refusing to package"; exit 1
 fi
 
 echo "── packaging"
