@@ -157,7 +157,7 @@
 
 <script>
   // The page reads the release feed, so a new release needs no redeploy.
-  const REPO = window.AMBIENT_REPO || "OWNER/ambient";
+  const REPO = window.AMBIENT_REPO || "FinnHanberg/ambient";
   fetch(`https://api.github.com/repos/${REPO}/releases/latest`)
     .then(r => r.ok ? r.json() : Promise.reject(r.status))
     .then(release => {
