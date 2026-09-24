@@ -195,7 +195,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ListenerDelegate, NSMe
     /// The reading surface. Everything with words in it lives down here, where
     /// the eye already is and where there is room to wrap.
     private func buildBottom() {
-        bottom = overlayPanel(size: NSSize(width: 560, height: 420))
+        bottom = overlayPanel(size: NSSize(width: 560 + Chrome.bleed * 2, height: 440))
         bottom.contentView = NSHostingView(rootView: HUD(s: session))
     }
 

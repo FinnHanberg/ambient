@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ambient Reel</title>
+<style>
+  :root{
+    --background:#0b0b0c; --card:#131315; --foreground:#f2f2f2;
+    --muted:#1b1b1e; --muted-foreground:#8b8b92; --border:#262629;
+    --radius:10px;
+    --sans:"Inter","Inter var",-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+  }
+  :root[data-theme="light"]{
+    --background:#fafafa; --card:#ffffff; --foreground:#141414;
+    --muted:#f4f4f5; --muted-foreground:#71717a; --border:#e6e6e6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--background); color:var(--foreground); min-height:100vh;
+    font:14px/1.45 var(--sans); -webkit-font-smoothing:antialiased;
+    font-variant-numeric:tabular-nums;
+  }
+  header{
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    padding:18px 24px; border-bottom:1px solid var(--border); background:var(--card);
+  }
+  header h1{font-size:15px;font-weight:600}
+  header p{font-size:13px;color:var(--muted-foreground)}
+  header .sp{flex:1}
+
+  main{display:grid; grid-template-columns:minmax(0,1fr) 300px}
+  @media (max-width:940px){ main{grid-template-columns:minmax(0,1fr)} aside{border-left:0!important;border-top:1px solid var(--border)} }
+
+  .work{padding:24px; display:flex; flex-direction:column; align-items:center; gap:16px}
+  .stage{
+    position:relative; border-radius:14px; overflow:hidden; background:#000;
+    box-shadow:0 10px 40px rgba(0,0,0,.4); line-height:0;
+  }
+  .stage canvas{display:block; cursor:grab; touch-action:none}
+  .stage canvas.dragging{cursor:grabbing}
+
+  .bar{display:flex; align-items:center; gap:10px; width:100%; max-width:720px}
+  .rail{position:relative; flex:1; height:26px; cursor:pointer; touch-action:none}
+  .rail .track{position:absolute; left:0; right:0; top:11px; height:4px; border-radius:2px;
+    background:var(--muted); overflow:hidden}
+  .rail .seg{position:absolute; top:0; bottom:0; border-right:1px solid var(--background)}
+  .rail .head{position:absolute; top:5px; width:2px; height:16px; background:var(--foreground);
+    border-radius:1px; transform:translateX(-1px)}
+
+  button{
+    font:inherit; font-size:13px; color:var(--foreground); background:var(--card);
+    border:1px solid var(--border); border-radius:8px; padding:6px 12px; cursor:pointer;
+    transition:background .15s ease-out, border-color .15s ease-out, opacity .15s ease-out;
+  }
+  button:hover{background:var(--muted)}
+  button:disabled{opacity:.45; cursor:default}
+  button[data-on="1"]{background:var(--foreground); color:var(--background); border-color:var(--foreground)}
+  .rec{color:#e0604a; border-color:#e0604a}
+
+  /* ── the cut strip ─────────────────────────────────────────────────────── */
+  .strip{display:flex; align-items:stretch; gap:0; width:100%; max-width:720px;
+    border:1px solid var(--border); border-radius:var(--radius); background:var(--card);
+    overflow:hidden}
+  .cut{flex:1; min-width:0; border:0; border-radius:0; background:transparent;
+    padding:0; text-align:left; cursor:pointer; position:relative}
+  .cut canvas{display:block; width:100%; aspect-ratio:9/12; background:#0e0e0f}
+  .cut .lbl{display:block; padding:7px 8px 8px; border-top:1px solid var(--border);
+    font-size:11.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .cut[data-live="1"]{background:var(--muted)}
+  .cut[data-live="1"] .lbl{color:var(--foreground)}
+  .cut .lbl{color:var(--muted-foreground)}
+  .tr{
+    flex:0 0 auto; width:54px; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; gap:4px; border:0; border-left:1px solid var(--border);
+    border-right:1px solid var(--border); background:transparent; cursor:pointer;
+    color:var(--muted-foreground); font-size:10.5px; border-radius:0;
+  }
+  .tr:hover{background:var(--muted)}
+  .tr svg{display:block}
+
+  aside{border-left:1px solid var(--border); background:var(--card); padding:22px 20px 40px}
+  aside h2{font-size:11px; font-weight:500; color:var(--muted-foreground);
+    letter-spacing:.06em; text-transform:uppercase; margin-bottom:10px}
+  aside h2:not(:first-of-type){margin-top:24px}
+  .row{display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:7px 0; border-bottom:1px solid var(--border)}
+  .row:last-of-type{border-bottom:0}
+  .row label{font-size:13px; color:var(--muted-foreground)}
+  .val{font-size:13px; cursor:ew-resize; padding:2px 8px; border-radius:6px;
+    border:1px solid transparent; user-select:none; touch-action:none; min-width:56px; text-align:right}
+  .val:hover{border-color:var(--border); background:var(--muted)}
+  .seg-btns{display:flex; gap:6px}
+  .seg-btns button{padding:5px 9px; font-size:12px}
+  .note{font-size:12px; color:var(--muted-foreground); margin-top:12px; line-height:1.5}
+  .note b{font-weight:500; color:var(--foreground)}
+  .note code{font:inherit; color:var(--foreground)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Ambient Reel</h1>
+  <p>Cuts arranged by trait distance. The transition is derived, not chosen.</p>
+  <span class="sp"></span>
+  <button id="theme">Light</button>
+  <a href="./kit.html" style="text-decoration:none"><button>Kit</button></a>
+</header>
+
+<main>
+  <section class="work">
+    <div class="stage" id="stage"><canvas id="view"></canvas></div>
+
+    <div class="bar">
+      <button id="play" data-on="1">Pause</button>
+      <div class="rail" id="rail"><div class="track" id="track"></div><div class="head" id="head"></div></div>
+      <span id="clock" style="font-size:12px;color:var(--muted-foreground);min-width:74px;text-align:right">0.0 / 12.0s</span>
+      <button id="sound" data-on="1" title="six synthesised voices, none over 260ms">Sound</button>
+    </div>
+
+    <div class="strip" id="strip"></div>
+
+    <div class="bar" style="justify-content:flex-end">
+      <button id="combine">Combine</button>
+      <span class="sp" style="flex:1"></span>
+      <button id="copySeq">Copy sequence</button>
+      <button id="export">Export video</button>
+    </div>
+  </section>
+
+  <aside>
+    <h2>Format</h2>
+    <div class="row"><label>Aspect</label>
+      <div class="seg-btns" id="aspect">
+        <button data-a="9:16" data-on="1">9:16</button>
+        <button data-a="4:5">4:5</button>
+        <button data-a="1:1">1:1</button>
+      </div></div>
+    <div class="row"><label>Staging</label>
+      <div class="seg-btns" id="staging">
+        <button data-s="none">None</button>
+        <button data-s="line" data-on="1">Line</button>
+        <button data-s="post">Post</button>
+      </div></div>
+
+    <h2>Timing</h2>
+    <div class="row"><label>Length</label><div class="val" data-k="total">12.0s</div></div>
+    <div class="row"><label>Cuts</label><div class="val" data-k="n">4</div></div>
+    <div class="row"><label>Hold</label><div class="val" data-k="hold">48%</div></div>
+    <div class="row"><label>Transition</label><div class="val" data-k="xf">300ms</div></div>
+    <div class="row"><label>Scale</label><div class="val" data-k="scale">110</div></div>
+
+    <h2>Chrome</h2>
+    <div class="row"><label>Radius</label><div class="val" data-k="radius">12</div></div>
+    <div class="row"><label>Hairline</label><div class="val" data-k="hair">12%</div></div>
+    <div class="row"><label>Ground</label><div class="val" data-k="ground">14</div></div>
+
+    <p class="note"><b>Combine</b> takes a fresh set of primitives and walks them
+      nearest-first by <b>family · mass · motion</b>, so neighbouring cuts differ least.
+      Click a cut to swap it for the next-nearest primitive; click a transition to
+      override it.</p>
+    <p class="note"><b>Export</b> records picture and sound off the audio clock for
+      exactly one loop and saves a <code>.webm</code>. For an MP4:
+      <code>ffmpeg -i reel.webm -c:v libx264 -pix_fmt yuv420p reel.mp4</code></p>
+  </aside>
+</main>
+
+<script type="module">
+import { AMBIENT, A, material } from './ambient-kit.js';
+import { lerp, clamp, easeOut, type, box } from './kit.js';
+
+const $ = s => document.querySelector(s);
+
+/* ── state ─────────────────────────────────────────────────────────────── */
+const S = {
+  aspect:'9:16', staging:'line', total:12, n:4, hold:.48, xf:.30, scale:110,
+  seq:[], playing:true, t0:performance.now(), time:0, seed:1, muted:false,
+};
+/* A component spans W × FILL × scale, whatever its own width — so scale is what
+   decides the margin, and anything over ~145 runs off both edges of the frame. */
+const MAXSCALE = 140;
+const T = { hair:.12, ground:14 };
+
+const ASPECT = { '9:16':[1080,1920], '4:5':[1080,1350], '1:1':[1080,1080] };
+
+/* ── the arrangement ───────────────────────────────────────────────────────
+   Distance between two primitives: a different family is the biggest jump, then
+   the gap in visual mass, then a repeated motion. Ordering greedily by this and
+   starting from the heaviest gives a reel that opens on the loudest object and
+   settles — and neighbouring cuts that share as much as possible. */
+const dist = (a, b) =>
+  (a.family === b.family ? 0 : .5) +
+  Math.abs(a.mass - b.mass) +
+  (a.motion === b.motion ? -.1 : 0);
+
+const mulberry = s => () => (s = s + 0x6D2B79F5, (t => {
+  t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+  return ((t ^ t >>> 14) >>> 0) / 4294967296;
+})(s));
+
+function arrange(n, seed){
+  const rnd = mulberry(seed);
+  /* one per family first, so a reel is never four pills */
+  const byFam = new Map();
+  AMBIENT.forEach((c, i) => {
+    const k = c.family;
+    if(!byFam.has(k) || rnd() < .4) byFam.set(k, i);
+  });
+  let pool = [...byFam.values()];
+  const rest = AMBIENT.map((_, i) => i).filter(i => !pool.includes(i)).sort(() => rnd() - .5);
+  while(pool.length < n) pool.push(rest.pop());
+  pool = pool.sort(() => rnd() - .5).slice(0, n);
+
+  /* open on the heaviest, then always take the nearest unused */
+  const out = [pool.reduce((a, b) => AMBIENT[b].mass > AMBIENT[a].mass ? b : a)];
+  const left = pool.filter(i => i !== out[0]);
+  while(left.length){
+    const last = AMBIENT[out[out.length - 1]];
+    let best = 0;
+    left.forEach((i, k) => { if(dist(last, AMBIENT[i]) < dist(last, AMBIENT[left[best]])) best = k; });
+    out.push(left.splice(best, 1)[0]);
+  }
+  return out.map(i => ({ i, tr:null }));
+}
+
+/* the transition is READ from the pair, never picked */
+function transition(a, b){
+  if(a.family === b.family) return 'morph';
+  if(Math.abs(a.mass - b.mass) < .18) return 'match';
+  return a.mass > b.mass ? 'push-up' : 'push-down';
+}
+const nextOf = k => S.seq[(k + 1) % S.seq.length];
+const trOf = (k) => S.seq[k].tr || transition(AMBIENT[S.seq[k].i], AMBIENT[nextOf(k).i]);
+const TRS = ['morph', 'match', 'push-up', 'push-down', 'cut'];
+
+/* ── the frame ─────────────────────────────────────────────────────────────
+   One render path: the screen and the exported file draw the same function at
+   the same logical size, so what you scrub is what lands in the file. */
+function drawPrimitive(x, W, H, comp, p, scale, tf){
+  x.save();
+  x.globalAlpha *= tf.a;
+  x.translate(W/2, H/2 + (tf.dy || 0) * H);
+  x.scale(tf.s, tf.s);
+  x.translate(-W/2, -H/2);
+  comp.draw(x, W, H, p, scale);
+  x.restore();
+}
+
+/* the phase of a cut: it holds, then sweeps, then rests on the last value */
+function phaseOf(u){
+  const h = S.hold;
+  return u < h ? 0 : easeOut((u - h) / (1 - h));
+}
+
+function caption(x, W, H, comp, alpha){
+  if(S.staging === 'none' || alpha <= 0) return;
+  x.save(); x.globalAlpha *= alpha;
+  x.translate(W/2, H * (S.staging === 'post' ? .78 : .845));
+  type(x, comp.note, { px: W * .0235, fill:'rgba(255,255,255,.40)', align:'center' });
+  x.restore();
+}
+
+function staging(x, W, H){
+  if(S.staging !== 'post') return;
+  const pad = W * .06, r = W * .036;
+  x.save();
+  /* the row a post carries: mark, handle, and the one line under it */
+  x.beginPath(); x.arc(pad + r, H * .885, r, 0, Math.PI*2);
+  x.fillStyle = 'rgba(255,255,255,.10)'; x.fill();
+  x.strokeStyle = A.hair; x.lineWidth = W * .0022; x.stroke();
+  /* the ring mark, drawn not typed */
+  x.beginPath(); x.arc(pad + r, H * .885, r * .42, 0, Math.PI*2);
+  x.strokeStyle = 'rgba(255,255,255,.72)'; x.lineWidth = W * .004; x.stroke();
+  x.save(); x.translate(pad + r*2 + W*.028, H * .885 - W*.004);
+  type(x, 'hanson.method', { px: W * .026, w:500, fill:'rgba(255,255,255,.88)' });
+  x.restore();
+  x.save(); x.translate(pad + r*2 + W*.028, H * .885 + W*.034);
+  type(x, 'Ambient — hold to speak, point while you talk',
+       { px: W * .0225, fill:'rgba(255,255,255,.40)' });
+  x.restore();
+  x.restore();
+}
+
+function renderFrame(x, W, H, time){
+  x.save();
+  x.fillStyle = A.ground; x.fillRect(0, 0, W, H);
+
+  const n = S.seq.length, cut = S.total / n;
+  const k = Math.min(n - 1, Math.floor(time / cut));
+  const u = (time - k * cut) / cut;
+  const comp = AMBIENT[S.seq[k].i];
+
+  /* a transition lives in the tail of the outgoing cut */
+  const xfU = S.xf / cut;
+  const inX = u > 1 - xfU;                 /* the last cut hands back to the first */
+  const w = inX ? clamp((u - (1 - xfU)) / xfU) : 0;
+  const e = easeOut(w);
+
+  const kind = inX ? trOf(k) : null;
+  const outA = clamp(1 - e * 1.75);        /* out leaves early … */
+  const inA  = clamp((e - .30) / .70);     /* … in arrives late, so they never both sit at half */
+  let outT = { a:1, s:1, dy:0 }, inT = { a:1, s:1, dy:0 };
+  if(inX){
+    if(kind === 'morph'){ outT = { a:outA, s:lerp(1,1.05,e), dy:0 }; inT = { a:inA, s:lerp(.95,1,e), dy:0 }; }
+    else if(kind === 'match'){ outT = { a:outA, s:lerp(1,.88,e), dy:0 }; inT = { a:inA, s:lerp(1.14,1,e), dy:0 }; }
+    else if(kind === 'cut'){ outT = { a:e < .5 ? 1 : 0, s:1, dy:0 }; inT = { a:e < .5 ? 0 : 1, s:1, dy:0 }; }
+    else {
+      const up = kind === 'push-up' ? -1 : 1;
+      const D = .64;                         /* far enough that the outgoing is CLEAR of
+                                                the frame at handover, or it pops */
+      outT = { a:1, s:1, dy: up * D * e };
+      inT  = { a:1, s:1, dy: -up * D * (1 - e) };
+    }
+  }
+
+  drawPrimitive(x, W, H, comp, phaseOf(u), S.scale/100, outT);
+  caption(x, W, H, comp, inX ? (kind === 'cut' ? outT.a : outA) : 1);
+  if(inX){
+    const nxt = AMBIENT[nextOf(k).i];
+    drawPrimitive(x, W, H, nxt, 0, S.scale/100, inT);
+    caption(x, W, H, nxt, kind === 'cut' ? inT.a : inA);
+  }
+
+  staging(x, W, H);
+  x.restore();
+}
+
+/* ── sound ─────────────────────────────────────────────────────────────────
+   Six voices, none over 260ms, all synthesised — no files. A component says
+   WHEN it makes a sound (`cue`) and which voice; the reel says nothing about
+   what a component sounds like, the same way it says nothing about how one
+   looks. Silence is a voice too: the waveform has no cue, which is what lets
+   the others land. */
+const VOICE = {
+  tick:  { f:2600, d:.014, noise:true, g:.055, q:9 },
+  click: { f:1500, d:.026, noise:true, g:.075, q:5 },
+  thock: { f:132,  d:.090, g:.20,  slide:-42 },
+  pip:   { f:1245, d:.055, g:.085 },
+  blip:  { f:760,  d:.080, g:.10,  slide:-330 },
+  swell: { f:196,  d:.260, g:.055, slide:64 },
+};
+let ctx = null, master = null, bus = null, noiseBuf = null;
+function audio(){
+  if(ctx) return ctx;
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  master = ctx.createGain(); master.gain.value = S.muted ? 0 : .85;
+  const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 80;
+  master.connect(hp); hp.connect(ctx.destination);
+  const n = (ctx.sampleRate * .3) | 0;
+  noiseBuf = ctx.createBuffer(1, n, ctx.sampleRate);
+  const d = noiseBuf.getChannelData(0);
+  for(let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  newBus();
+  return ctx;
+}
+/* everything scheduled hangs off one bus, so a scrub can silence the future */
+function newBus(){
+  if(bus){ bus.gain.cancelScheduledValues(ctx.currentTime); bus.gain.value = 0;
+           setTimeout(() => bus && bus.disconnect(), 800); }
+  bus = ctx.createGain(); bus.connect(master);
+}
+function voice(name, at){
+  const v = VOICE[name]; if(!v || !ctx) return;
+  /* a context that has only just started sits near zero, so an anchor computed
+     from a loop already in progress lands in the past — never schedule there */
+  if(!(at >= ctx.currentTime)) return;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(.0001, at);
+  g.gain.linearRampToValueAtTime(v.g, at + .004);
+  g.gain.exponentialRampToValueAtTime(.0001, at + v.d);
+  g.connect(bus);
+  if(v.noise){
+    const src = ctx.createBufferSource(); src.buffer = noiseBuf;
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass';
+    bp.frequency.value = v.f; bp.Q.value = v.q;
+    src.connect(bp); bp.connect(g); src.start(at); src.stop(at + v.d + .05);
+  } else {
+    const o = ctx.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(v.f, at);
+    if(v.slide) o.frequency.exponentialRampToValueAtTime(
+      Math.max(40, v.f + v.slide), at + v.d);
+    o.connect(g); o.start(at); o.stop(at + v.d + .05);
+  }
+}
+
+/* a cue's phase is a phase, so invert the hold to find WHEN in the cut it lands */
+const uOfPhase = p => S.hold + (1 - S.hold) * (1 - Math.pow(1 - clamp(p), 1/3));
+
+function cues(){
+  const out = [], n = S.seq.length, cut = S.total / n;
+  S.seq.forEach((c, k) => {
+    const comp = AMBIENT[c.i];
+    (comp.cue || []).forEach(([p, v]) => out.push({ t: (k + uOfPhase(p)) * cut, v }));
+    const kind = trOf(k);
+    /* only a hard move gets a mark of its own; a dissolve is silent */
+    if(kind === 'cut' || kind.startsWith('push'))
+      out.push({ t: (k + 1) * cut - S.xf * .55, v:'tick' });
+  });
+  return out.sort((a, b) => a.t - b.t);
+}
+function scheduleLoop(at0, list){
+  (list || cues()).forEach(c => voice(c.v, at0 + c.t));
+}
+
+
+/* live playback: keep one loop scheduled ahead of the clock */
+let schedNext = -1;
+function resetAudio(){ if(ctx){ newBus(); } schedNext = -1; }
+function pumpAudio(){
+  if(!S.playing || S.muted || !ctx || ctx.state !== 'running') return;
+  const now = ctx.currentTime;
+  if(schedNext < 0){
+    const anchor = now - S.time;
+    scheduleLoop(anchor);
+    schedNext = anchor + S.total;
+  }
+  while(schedNext < now + 1.2){ scheduleLoop(schedNext); schedNext += S.total; }
+}
+/* the context cannot start without a gesture */
+addEventListener('pointerdown', () => { audio(); ctx.resume(); }, { once:false });
+
+/* ── the view ──────────────────────────────────────────────────────────── */
+const view = $('#view'), stageEl = $('#stage');
+function fitView(){
+  const [W, H] = ASPECT[S.aspect];
+  const maxH = Math.max(300, Math.min(innerHeight - 430, 560));
+  const h = maxH, w = h * W / H;
+  const d = Math.min(2, devicePixelRatio || 1);
+  view.style.width = w + 'px'; view.style.height = h + 'px';
+  view.width = Math.round(w * d); view.height = Math.round(h * d);
+}
+function paintView(){
+  const [W, H] = ASPECT[S.aspect];
+  const x = view.getContext('2d');
+  const k = view.width / W;
+  x.setTransform(k, 0, 0, k, 0, 0);
+  renderFrame(x, W, H, S.time);
+}
+
+/* ── the strip ─────────────────────────────────────────────────────────── */
+const stripEl = $('#strip');
+function buildStrip(){
+  stripEl.innerHTML = '';
+  S.seq.forEach((c, k) => {
+    const b = document.createElement('button');
+    b.className = 'cut';
+    b.innerHTML = `<canvas></canvas><span class="lbl"></span>`;
+    b.querySelector('.lbl').textContent = AMBIENT[c.i].name;
+    b.addEventListener('click', () => swapCut(k));
+    stripEl.appendChild(b);
+    if(k < S.seq.length - 1){
+      const t = document.createElement('button');
+      t.className = 'tr';
+      t.innerHTML = `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+        stroke="currentColor" stroke-width="1.3"></svg><span></span>`;
+      t.addEventListener('click', e => { e.stopPropagation(); cycleTr(k); });
+      stripEl.appendChild(t);
+    }
+  });
+  syncStrip();
+}
+const GLYPH = {
+  'morph':     '<circle cx="6" cy="9" r="4"/><circle cx="12" cy="9" r="4"/>',
+  'match':     '<rect x="2" y="4" width="10" height="10" rx="2"/><rect x="7" y="6" width="9" height="9" rx="2"/>',
+  'push-up':   '<path d="M9 14V4M5 8l4-4 4 4"/>',
+  'push-down': '<path d="M9 4v10M5 10l4 4 4-4"/>',
+  'cut':       '<path d="M9 2v14"/>',
+};
+function syncStrip(){
+  const nodes = [...stripEl.children];
+  S.seq.forEach((c, k) => {
+    const cell = nodes[k * 2];
+    cell.querySelector('.lbl').textContent = AMBIENT[c.i].name;
+    if(k < S.seq.length - 1){
+      const t = nodes[k * 2 + 1], kind = trOf(k);
+      t.querySelector('svg').innerHTML = GLYPH[kind];
+      t.querySelector('span').textContent = kind;
+      t.title = c.tr ? 'overridden — click to cycle' : 'derived from the pair';
+      t.style.color = c.tr ? 'var(--foreground)' : 'var(--muted-foreground)';
+    }
+  });
+  const cut = S.total / S.seq.length;
+  const live = Math.min(S.seq.length - 1, Math.floor(S.time / cut));
+  S.seq.forEach((_, k) => nodes[k * 2].dataset.live = k === live ? '1' : '0');
+  $('#track').innerHTML = S.seq.map((_, k) =>
+    `<div class="seg" style="left:${k / S.seq.length * 100}%;width:${100 / S.seq.length}%"></div>`).join('');
+}
+function paintStrip(){
+  const nodes = [...stripEl.children];
+  S.seq.forEach((c, k) => {
+    const cv = nodes[k * 2].querySelector('canvas');
+    const w = cv.clientWidth, h = cv.clientHeight, d = Math.min(2, devicePixelRatio || 1);
+    if(!w) return;
+    if(cv.width !== Math.round(w*d)){ cv.width = Math.round(w*d); cv.height = Math.round(h*d); }
+    const x = cv.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0);
+    x.fillStyle = A.ground; x.fillRect(0, 0, w, h);
+    AMBIENT[c.i].draw(x, w, h, AMBIENT[c.i].rest, .5);
+  });
+}
+
+/* click a cut → the next-nearest primitive that is not already next door */
+function swapCut(k){
+  const used = S.seq.map(c => c.i);
+  const here = AMBIENT[S.seq[k].i];
+  const cands = AMBIENT.map((c, i) => i)
+    .filter(i => !used.includes(i))
+    .sort((a, b) => dist(here, AMBIENT[a]) - dist(here, AMBIENT[b]));
+  if(!cands.length) return;
+  S.seq[k].i = cands[0];
+  syncStrip(); resetAudio();
+}
+function cycleTr(k){
+  const cur = trOf(k);
+  const next = TRS[(TRS.indexOf(cur) + 1) % TRS.length];
+  S.seq[k].tr = next === transition(AMBIENT[S.seq[k].i], AMBIENT[nextOf(k).i]) ? null : next;
+  syncStrip(); resetAudio();
+}
+
+/* ── tokens ────────────────────────────────────────────────────────────── */
+function applyTokens(){
+  A.hair = `rgba(255,255,255,${T.hair})`;
+  const g = Math.round(T.ground).toString(16).padStart(2, '0');
+  A.ground = `#${g}${g}${g}`;
+}
+const STEP = { total:.03, n:.02, hold:.003, xf:.003, scale:.6, radius:.09, hair:.0016, ground:.12 };
+const SET = {
+  total: v => S.total = Math.min(30, Math.max(3, v)),
+  n:     v => { const k = Math.round(Math.min(8, Math.max(2, v)));
+                if(k !== S.seq.length){ S.seq = arrange(k, S.seed); buildStrip(); } },
+  hold:  v => S.hold = Math.min(.8, Math.max(0, v)),
+  xf:    v => S.xf = Math.min(1.2, Math.max(0, v)),
+  scale: v => S.scale = Math.min(MAXSCALE, Math.max(20, v)),
+  radius:v => A.radius = Math.round(Math.min(26, Math.max(0, v))),
+  hair:  v => T.hair = Math.min(.5, Math.max(0, v)),
+  ground:v => T.ground = Math.round(Math.min(40, Math.max(0, v))),
+};
+const GET = {
+  total:()=>S.total, n:()=>S.seq.length, hold:()=>S.hold, xf:()=>S.xf, scale:()=>S.scale,
+  radius:()=>A.radius, hair:()=>T.hair, ground:()=>T.ground,
+};
+function syncTokens(){
+  $('[data-k="total"]').textContent = S.total.toFixed(1) + 's';
+  $('[data-k="n"]').textContent = S.seq.length;
+  $('[data-k="hold"]').textContent = Math.round(S.hold * 100) + '%';
+  $('[data-k="xf"]').textContent = Math.round(S.xf * 1000) + 'ms';
+  $('[data-k="scale"]').textContent = Math.round(S.scale);
+  $('[data-k="radius"]').textContent = A.radius;
+  $('[data-k="hair"]').textContent = Math.round(T.hair * 100) + '%';
+  $('[data-k="ground"]').textContent = Math.round(T.ground);
+}
+document.querySelectorAll('.val').forEach(el => {
+  const k = el.dataset.k; let d0 = null;
+  el.addEventListener('pointerdown', e => { el.setPointerCapture(e.pointerId); d0 = { x:e.clientX, v:GET[k]() }; });
+  el.addEventListener('pointermove', e => {
+    if(!d0) return;
+    SET[k](d0.v + (e.clientX - d0.x) * STEP[k]);
+    applyTokens(); syncTokens(); syncStrip(); resetAudio();
+  });
+  el.addEventListener('pointerup', () => d0 = null);
+});
+
+/* ── transport ─────────────────────────────────────────────────────────── */
+const pause = () => { S.playing = false; $('#play').dataset.on = '0'; $('#play').textContent = 'Play'; resetAudio(); };
+$('#play').addEventListener('click', () => {
+  S.playing = !S.playing;
+  S.t0 = performance.now() - S.time * 1000;
+  resetAudio();
+  $('#play').dataset.on = S.playing ? '1' : '0';
+  $('#play').textContent = S.playing ? 'Pause' : 'Play';
+});
+const rail = $('#rail');
+const railTo = e => {
+  const r = rail.getBoundingClientRect();
+  S.time = clamp((e.clientX - r.left) / r.width) * S.total;
+  pause();
+};
+rail.addEventListener('pointerdown', e => { rail.setPointerCapture(e.pointerId); railTo(e); });
+rail.addEventListener('pointermove', e => { if(e.buttons) railTo(e); });
+
+/* scrub on the frame itself */
+let drag = null;
+view.addEventListener('pointerdown', e => {
+  view.setPointerCapture(e.pointerId); view.classList.add('dragging');
+  drag = { x:e.clientX, t:S.time }; pause();
+});
+view.addEventListener('pointermove', e => {
+  if(!drag) return;
+  S.time = clamp((drag.t + (e.clientX - drag.x) / view.clientWidth * S.total) / S.total) * S.total;
+});
+const endDrag = () => { drag = null; view.classList.remove('dragging'); };
+view.addEventListener('pointerup', endDrag);
+view.addEventListener('pointercancel', endDrag);
+
+addEventListener('keydown', e => {
+  if(e.code === 'Space'){ e.preventDefault(); $('#play').click(); }
+  if(e.code === 'KeyC'){ $('#combine').click(); }
+  if(e.code === 'ArrowRight'){ pause(); S.time = Math.min(S.total, S.time + .1); }
+  if(e.code === 'ArrowLeft'){ pause(); S.time = Math.max(0, S.time - .1); }
+});
+
+/* ── controls ──────────────────────────────────────────────────────────── */
+$('#combine').addEventListener('click', () => {
+  S.seed = (S.seed * 1664525 + 1013904223) >>> 0;
+  S.seq = arrange(S.seq.length, S.seed);
+  buildStrip(); S.time = 0; S.t0 = performance.now(); resetAudio();
+});
+$('#aspect').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  S.aspect = b.dataset.a;
+  [...e.currentTarget.children].forEach(c => c.dataset.on = c === b ? '1' : '0');
+  fitView();
+});
+$('#staging').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  S.staging = b.dataset.s;
+  [...e.currentTarget.children].forEach(c => c.dataset.on = c === b ? '1' : '0');
+});
+$('#sound').addEventListener('click', e => {
+  S.muted = !S.muted;
+  audio(); ctx.resume();
+  master.gain.setTargetAtTime(S.muted ? 0 : .85, ctx.currentTime, .02);
+  e.target.dataset.on = S.muted ? '0' : '1';
+  e.target.textContent = S.muted ? 'Muted' : 'Sound';
+  resetAudio();
+});
+$('#theme').addEventListener('click', e => {
+  const light = document.documentElement.dataset.theme === 'light';
+  document.documentElement.dataset.theme = light ? 'dark' : 'light';
+  e.target.textContent = light ? 'Light' : 'Dark';
+});
+const flash = (b, w) => { const was = b.textContent; b.textContent = w; setTimeout(() => b.textContent = was, 1100); };
+$('#copySeq').addEventListener('click', async e => {
+  const cut = S.total / S.seq.length;
+  const lines = S.seq.map((c, k) =>
+    `${(k*cut).toFixed(2)}s  ${material(AMBIENT[c.i].id, 0, S.scale)} → ` +
+    `${material(AMBIENT[c.i].id, 1, S.scale)}` +
+    (k < S.seq.length - 1 ? `  ⟶ ${trOf(k)}` : ''));
+  await navigator.clipboard.writeText(
+    `${S.aspect} · ${S.total.toFixed(1)}s · ${S.seq.length} cuts\n` + lines.join('\n'));
+  flash(e.target, 'Copied');
+});
+
+/* ── export: record the real frame, one loop, full resolution ──────────── */
+$('#export').addEventListener('click', async e => {
+  const btn = e.target;
+  const [W, H] = ASPECT[S.aspect];
+  const off = document.createElement('canvas');
+  off.width = W; off.height = H;
+  const ox = off.getContext('2d');
+
+  const types = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+  const mime = types.find(t => MediaRecorder.isTypeSupported(t));
+  if(!mime){ flash(btn, 'No recorder'); return; }
+
+  const wasPlaying = S.playing; pause();
+  btn.disabled = true; btn.classList.add('rec');
+
+  /* sound and picture are both driven by the AUDIO clock, so they cannot drift:
+     a dropped frame shortens nothing and the cues stay on their marks. */
+  audio(); await ctx.resume(); resetAudio();
+  const dest = ctx.createMediaStreamDestination();
+  master.connect(dest);
+  const stream = new MediaStream([
+    ...off.captureStream(60).getVideoTracks(),
+    ...dest.stream.getAudioTracks(),
+  ]);
+  const rec = new MediaRecorder(stream, { mimeType:mime, videoBitsPerSecond: 12_000_000 });
+  const chunks = [];
+  rec.ondataavailable = ev => ev.data.size && chunks.push(ev.data);
+  const done = new Promise(res => rec.onstop = res);
+
+  const t0 = ctx.currentTime + .15;
+  if(!S.muted) scheduleLoop(t0);
+  renderFrame(ox, W, H, 0);
+  rec.start();
+  const step = () => {
+    const t = ctx.currentTime - t0;
+    renderFrame(ox, W, H, Math.min(Math.max(t, 0), S.total - .0005));
+    btn.textContent = `Recording ${Math.max(0, S.total - t).toFixed(1)}s`;
+    if(t < S.total) requestAnimationFrame(step);
+    else rec.stop();
+  };
+  requestAnimationFrame(step);
+  await done;
+  master.disconnect(dest);
+
+  const blob = new Blob(chunks, { type:'video/webm' });
+  const name = `ambient-reel-${S.aspect.replace(':','x')}-` +
+               `${S.seq.map(c => AMBIENT[c.i].id.replace('am-','')).join('-')}.webm`;
+  btn.classList.remove('rec'); btn.disabled = false; btn.textContent = 'Export video';
+
+  /* published: the viewer confirms the save. Local: an ordinary download. */
+  const dl = window.claude?.use ? await window.claude.use('downloads') : null;
+  if(dl){
+    try{ await dl.save({ filename: name, data: blob }); flash(btn, 'Saved'); }
+    catch{ flash(btn, 'Declined'); }
+  } else {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    flash(btn, 'Saved');
+  }
+  if(wasPlaying) $('#play').click();
+});
+
+/* ── the loop ──────────────────────────────────────────────────────────── */
+function tick(t){
+  if(S.playing) S.time = ((t - S.t0) / 1000) % S.total;
+  pumpAudio();
+  paintView(); paintStrip(); syncStrip();
+  $('#head').style.left = (S.time / S.total * 100) + '%';
+  $('#clock').textContent = `${S.time.toFixed(1)} / ${S.total.toFixed(1)}s`;
+  requestAnimationFrame(tick);
+}
+
+addEventListener('resize', fitView);
+applyTokens();
+S.seq = arrange(S.n, S.seed);
+buildStrip(); syncTokens(); fitView();
+requestAnimationFrame(tick);
+
+window.reel = { S, T, A, AMBIENT, arrange, transition, dist, renderFrame,
+                buildStrip, syncTokens, cues, VOICE, audio: () => ctx };
+</script>
+</body>
+</html>

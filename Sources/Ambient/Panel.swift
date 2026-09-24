@@ -14,6 +14,15 @@ enum Chrome {
 
     /// The horizontal rhythm every row, header and footer sits on.
     static let gutter: CGFloat = 18
+
+    /// Shadow geometry, and the room a window must leave for it.
+    ///
+    /// A shadow reaches `radius + offset` beyond the card. Give the window less
+    /// than that and the falloff is sliced off square — which reads as a hard
+    /// band under the panel, not as elevation. Derived, never guessed twice.
+    static let shadowRadius: CGFloat = 18
+    static let shadowY: CGFloat = 6
+    static var bleed: CGFloat { shadowRadius + shadowY + 4 }
 }
 
 extension View {
@@ -29,9 +38,10 @@ extension View {
                         RoundedRectangle(cornerRadius: Chrome.radius, style: .continuous)
                             .strokeBorder(Chrome.hair, lineWidth: 1)
                     )
-                    .shadow(color: .black.opacity(0.36), radius: 20, y: 7)
+                    .shadow(color: .black.opacity(0.36),
+                            radius: Chrome.shadowRadius, y: Chrome.shadowY)
             )
-            .padding(20)
+            .padding(Chrome.bleed)
     }
 }
 

@@ -17,8 +17,8 @@ struct HUD: View {
                 card.transition(.opacity.combined(with: .offset(y: 8)))
             }
         }
-        .padding(18)
-        .frame(width: 560, alignment: .bottom)
+        .padding(Chrome.bleed)
+        .frame(width: 560 + Chrome.bleed * 2, alignment: .bottom)
         .animation(.spring(response: 0.3, dampingFraction: 0.86), value: s.visible)
         .animation(.easeOut(duration: 0.16), value: s.phase)
     }
@@ -35,7 +35,8 @@ struct HUD: View {
                 .fill(Color(white: 0.055))
                 .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .strokeBorder(hair, lineWidth: 1))
-                .shadow(color: .black.opacity(0.3), radius: 14, y: 4)
+                .shadow(color: .black.opacity(0.3),
+                        radius: Chrome.shadowRadius, y: Chrome.shadowY)
         )
         .overlay(alignment: .topTrailing) { closeButton }
     }

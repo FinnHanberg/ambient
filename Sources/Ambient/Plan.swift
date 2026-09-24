@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// The plan, argued from the user's own numbers.
@@ -8,7 +9,17 @@ import SwiftUI
 /// No urgency, no countdown, no invented figure.
 struct PlanCard: View {
     @ObservedObject var usage = Usage.shared
-    var upgrade: () -> Void = {}
+    @ObservedObject var license = License.shared
+
+    /// Opens wherever the product is actually sold. Without a configured store
+    /// the button would be a dead end, so it says so instead of pretending.
+    private func upgrade() {
+        guard let buy = license.config?.buyURL, let url = URL(string: buy) else {
+            NSWorkspace.shared.open(URL(string: "https://finnhanberg.github.io/ambient/")!)
+            return
+        }
+        NSWorkspace.shared.open(url)
+    }
 
     private var grant: Int { usage.onStarter ? usage.starterGrant : usage.monthlyGrant }
     private var used: Double { 1 - Double(usage.remaining) / Double(max(1, grant)) }
@@ -26,7 +37,8 @@ struct PlanCard: View {
                 }
                 Spacer(minLength: 10)
                 if !usage.pro {
-                    PillButton(label: "Upgrade — €15/mo", strong: true, action: upgrade)
+                    PillButton(label: license.sellable ? "Upgrade — €15/mo" : "Learn more",
+                               strong: true, action: upgrade)
                 }
             }
 
