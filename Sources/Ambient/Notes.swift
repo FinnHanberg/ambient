@@ -128,22 +128,27 @@ enum Deliver {
         }
     }
 
-    /// Put the batch in front of you in Claude, but do not submit it. Choosing
-    /// the conversation is not a decision this app should make — it guessed
-    /// wrong often enough to be worse than useless.
+    /// Copy, then bring Claude forward. Deliberately no synthetic ⌘V.
+    ///
+    /// Posting a keystroke into another app depends on that app having the
+    /// right field focused at the moment the event lands, and on it accepting
+    /// synthetic events at all. It never worked reliably here, and a paste that
+    /// silently goes nowhere — or into the wrong field — is worse than asking
+    /// for one keypress. The batch is on the clipboard before Claude is even
+    /// activated, so ⌘V always has something to paste.
     @MainActor
     static func paste(_ text: String) async -> (ok: Bool, text: String) {
-        guard !text.isEmpty else { return (false, "nothing to paste") }
+        guard !text.isEmpty else { return (false, "nothing to send") }
+
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(text, forType: .string)
-        guard let app = claude() else { return (false, "on the clipboard — Claude isn't running") }
-        app.activate(options: [])
-        try? await Task.sleep(nanoseconds: 450_000_000)
-        guard let src = CGEventSource(stateID: .combinedSessionState) else {
-            return (false, "on the clipboard")
+
+        guard let app = claude() else {
+            return (true, "copied — Claude isn't running")
         }
-        key(src, 9, command: true)
-        return (true, "pasted — press return to send")
+        app.activate(options: [])
+        Log.say("deliver · copied and activated \(app.localizedName ?? "Claude")")
+        return (true, "copied — press ⌘V")
     }
 
     @MainActor

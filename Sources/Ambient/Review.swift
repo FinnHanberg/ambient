@@ -206,7 +206,7 @@ struct Review: View {
         HStack(spacing: 9) {
             PillButton(label: locked ? "Copy raw" : (clean ? "Copy brief" : "Copy"),
                        strong: true, icon: "doc.on.doc") { copy() }
-            PillButton(label: "Paste into Claude", icon: "arrow.right") { send() }
+            PillButton(label: "Open Claude", icon: "arrow.up.forward.app") { send() }
             Spacer(minLength: 8)
             if let flash {
                 Text(flash).font(Type.meta(10.5)).foregroundStyle(.white.opacity(0.6))
