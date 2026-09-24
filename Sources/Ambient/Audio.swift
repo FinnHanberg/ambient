@@ -32,6 +32,14 @@ final class AudioTap {
         lock.lock(); defer { lock.unlock() }; return fed
     }
 
+    /// Call whenever a new analyzer is created. Its audio timeline restarts at
+    /// zero, and a counter that kept running across the rebuild made every word
+    /// timestamp fail its sanity check and fall back to "now" — which silently
+    /// resolved every "this" to wherever the cursor ended up.
+    func resetClock() {
+        lock.lock(); fed = 0; lock.unlock()
+    }
+
     func receive(_ buf: AVAudioPCMBuffer) {
         let level = AudioTap.rms(buf)
         onLevel?(level)

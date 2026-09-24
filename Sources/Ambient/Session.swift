@@ -205,6 +205,7 @@ final class Session: ObservableObject {
             }
         }
         let frames = Recorder.shared.frameCount
+        let dropped = Recorder.shared.dropped
         if !engagedNow { Recorder.shared.discard() }
 
         // A thought that ran across two finalisations is one note, not two.
@@ -235,7 +236,7 @@ final class Session: ObservableObject {
         } else {
             spoken = shots.count == 1 ? "" : "\(shots.count) points"
         }
-        Log.say("note · shots=\(shots.count) from \(frames) frames")
+        Log.say("note · shots=\(shots.count) from \(frames) frames (\(dropped) captures overran)")
 
         phase = .noted(u.text)
         show()

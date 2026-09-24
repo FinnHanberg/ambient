@@ -24,6 +24,9 @@ final class Recorder {
     private var frames: [Frame] = []
     private var timer: Timer?
     private var busy = false
+    /// Captures that overran their slot. Talking fast makes these pile up, and
+    /// a gap in the ring is a note with no picture.
+    private(set) var dropped = 0
     private let cap = 30                    // rolling 10s — a segment only ever needs the seconds just gone
     private let size = CGSize(width: 900, height: 600)
 
@@ -35,6 +38,7 @@ final class Recorder {
             return
         }
         frames.removeAll()
+        dropped = 0
         timer?.invalidate()
         let t = Timer.scheduledTimer(withTimeInterval: 0.33, repeats: true) { [weak self] _ in
             Task { @MainActor in await self?.grab() }
@@ -61,7 +65,7 @@ final class Recorder {
             if !complained { complained = true; Log.say("recorder · skipping — secure input active") }
             return
         }
-        guard !busy else { return }
+        guard !busy else { dropped += 1; return }
         busy = true
         defer { busy = false }
 
@@ -100,9 +104,16 @@ final class Recorder {
     func save(at moment: Date, id: String) -> String? {
         guard let f = frames.min(by: {
             abs($0.at.timeIntervalSince(moment)) < abs($1.at.timeIntervalSince(moment))
-        }) else { return nil }
-        // A frame from a different part of the hold is worse than none.
-        guard abs(f.at.timeIntervalSince(moment)) < 2.5 else { return nil }
+        }) else {
+            Log.say("shot · no frames captured at all for this note")
+            return nil
+        }
+        let drift = abs(f.at.timeIntervalSince(moment))
+        // A late frame is worth far more than no frame: the page has usually
+        // not moved, and a note with no picture is the thing he notices.
+        if drift > 2.5 {
+            Log.say("shot · nearest frame is \(String(format: "%.1f", drift))s off — using it anyway")
+        }
         return Shot.write(f.image, cursor: f.cursor, regionSize: f.rect.size, id: id)
     }
 }

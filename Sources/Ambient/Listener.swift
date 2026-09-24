@@ -62,6 +62,10 @@ final class Listener {
     private var engageStreamTime: Double = 0
     private var finalWords: [StampedWord] = []
     private var sawFinal = false
+    /// Loudest sample seen during this pass. macOS answers a stale microphone
+    /// grant with silence rather than an error, so audio can flow all the way
+    /// to the analyzer as pure zeroes and every pass comes back empty.
+    private var peak: Double = 0
     private var volatileText = ""
 
     // MARK: - Setup
@@ -96,6 +100,7 @@ final class Listener {
 
             let a = SpeechAnalyzer(modules: [t])
             analyzer = a
+            tap.resetClock()          // new analyzer, new audio timeline
             // Do not await this. The analyzer waits on its input sequence, and
             // the microphone now opens only while the chord is held — awaiting
             // it here meant prepare() never returned, the listener never
@@ -181,6 +186,7 @@ final class Listener {
         engageStreamTime = tap.fedSeconds
         finalWords = []
         sawFinal = false
+        peak = 0
         volatileText = ""
         state = .hearing
         Log.say("engage · streamTime=\(String(format: "%.2f", tap.fedSeconds))")
@@ -210,7 +216,15 @@ final class Listener {
         // The recogniser opens a turn with leading dots and commas while it
         // settles. They are not speech.
         text = text.trimmingCharacters(in: CharacterSet(charactersIn: ". ,…"))
-        Log.say("release · final=\(words.count) volatile=“\(volatileText)” text=“\(text)”")
+        Log.say("release · final=\(words.count) peak=\(String(format: "%.3f", peak)) text=“\(text)”")
+
+        // Silence that looks like working audio is the worst failure mode this
+        // app has: buffers arrive, the analyzer accepts them, nothing comes
+        // back, and nothing anywhere says why.
+        if text.isEmpty, peak < 0.01, tap.fedSeconds > 0 {
+            state = .failed("The microphone is returning silence. Reset its permission — see Settings → Diagnostics.")
+            Log.say("release · SILENT INPUT (peak \(peak)) — microphone grant is not effective")
+        }
 
         volatileText = ""
         delegate?.listener(volatile: "")
@@ -241,6 +255,10 @@ final class Listener {
                 let offset = CMTimeGetSeconds(range.start) - engageStreamTime
                 if offset.isFinite, offset >= -1, offset < 600 {
                     when = engagedAt.addingTimeInterval(max(0, offset))
+                } else {
+                    // Never fail this quietly: a bad offset means every note
+                    // binds to the end of the pass instead of the word.
+                    Log.say("word · offset out of range (\(String(format: "%.1f", offset))s) — timing lost")
                 }
             }
             finalWords.append(StampedWord(text: word, t: when))
@@ -281,7 +299,11 @@ final class Listener {
         let sink = feed
         tap.onBuffer = { buf in sink?.yield(AnalyzerInput(buffer: buf)) }
         tap.onLevel = { [weak self] level in
-            Task { @MainActor in self?.delegate?.listener(level: level) }
+            Task { @MainActor in
+                guard let self else { return }
+                if self.engaged { self.peak = max(self.peak, level) }
+                self.delegate?.listener(level: level)
+            }
         }
         Log.say("audio · wired (device opens only while recording)")
     }
@@ -311,6 +333,35 @@ final class Listener {
         engine = nil
         delegate?.listener(level: 0)
         Log.say("audio · closed")
+    }
+
+    // MARK: - Test injection
+
+    /// Push known audio through the live feed exactly as the tap would, so the
+    /// whole engaged→release→words path can be exercised without a microphone.
+    func inject(_ url: URL) -> Int {
+        guard let outFormat = analyzerFormat,
+              let file = try? AVAudioFile(forReading: url),
+              let converter = AVAudioConverter(from: file.processingFormat, to: outFormat)
+        else { return 0 }
+        var fed = 0
+        while true {
+            guard let inBuf = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: 4096),
+                  (try? file.read(into: inBuf)) != nil, inBuf.frameLength > 0 else { break }
+            let ratio = outFormat.sampleRate / file.processingFormat.sampleRate
+            let cap = AVAudioFrameCount(Double(inBuf.frameLength) * ratio + 1024)
+            guard let out = AVAudioPCMBuffer(pcmFormat: outFormat, frameCapacity: cap) else { break }
+            var err: NSError?
+            var served = false
+            converter.convert(to: out, error: &err) { _, status in
+                if served { status.pointee = .noDataNow; return nil }
+                served = true; status.pointee = .haveData; return inBuf
+            }
+            guard err == nil, out.frameLength > 0 else { break }
+            fed += Int(out.frameLength)
+            feed?.yield(AnalyzerInput(buffer: out))
+        }
+        return fed
     }
 
     // MARK: - Errors

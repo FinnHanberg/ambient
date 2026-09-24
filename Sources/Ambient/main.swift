@@ -20,6 +20,7 @@ final class KeyPanel: NSPanel {
 final class AppDelegate: NSObject, NSApplicationDelegate, ListenerDelegate, NSMenuDelegate {
     private var review: NSPanel!
     private var settings: NSPanel!
+    private var welcome: NSPanel!
     private var bottom: NSPanel!
     private var rail: NSPanel!
     private var pill: NSPanel!
@@ -40,6 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ListenerDelegate, NSMe
         buildSurfaces()
         buildReview()
         buildSettings()
+        buildWelcome()
         buildStatusItem()
         session.onPassEnded = { [weak self] in self?.showReview() }
         Notes.shared.$items
@@ -51,13 +53,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ListenerDelegate, NSMe
         // Ask for both up front, at launch, together. Deferring the screen
         // request until after the model check meant it could never fire on a
         // machine where something earlier returned first.
-        if !Pointer.axTrusted, !UserDefaults.standard.bool(forKey: "ambient.askedAX") {
-            UserDefaults.standard.set(true, forKey: "ambient.askedAX")
-            Pointer.requestAX()
-        }
-        if !Shot.permitted, !UserDefaults.standard.bool(forKey: "ambient.askedScreen") {
-            UserDefaults.standard.set(true, forKey: "ambient.askedScreen")
-            _ = Shot.requestPermission()
+        // On a first run the onboarding asks for these, each on the screen that
+        // explains it. Firing the prompts here as well would be the batch of
+        // unexplained dialogs it exists to avoid.
+        if !Welcome.seen {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
+                self?.showWelcome()
+            }
+        } else {
+            if !Pointer.axTrusted { Pointer.requestAX() }
+            if !Shot.permitted { _ = Shot.requestPermission() }
         }
         watchPermissions()
         NSWorkspace.shared.notificationCenter.addObserver(
@@ -283,6 +288,43 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ListenerDelegate, NSMe
         settings.setContentSize(host.fittingSize)
     }
 
+    private func buildWelcome() {
+        welcome = KeyPanel(contentRect: NSRect(x: 0, y: 0, width: 520, height: 420),
+                           styleMask: [.borderless, .nonactivatingPanel],
+                           backing: .buffered, defer: false)
+        welcome.isMovableByWindowBackground = true
+        welcome.backgroundColor = .clear
+        welcome.isOpaque = false
+        welcome.hasShadow = false
+        welcome.level = .floating
+        welcome.isReleasedWhenClosed = false
+        welcome.sharingType = .none
+        let host = NSHostingView(rootView:
+            WelcomeView(s: session, done: { [weak self] in self?.finishWelcome() }))
+        welcome.contentView = host
+        welcome.setContentSize(host.fittingSize)
+    }
+
+    @objc private func showWelcome() {
+        Welcome.shared.step = 0
+        Welcome.shared.heardSomething = false
+        if let host = welcome.contentView as? NSHostingView<WelcomeView> {
+            welcome.setContentSize(host.fittingSize)
+        }
+        if let screen = NSScreen.main {
+            let f = screen.visibleFrame
+            welcome.setFrameOrigin(NSPoint(x: f.midX - welcome.frame.width / 2,
+                                           y: f.midY - welcome.frame.height / 2))
+        }
+        welcome.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    private func finishWelcome() {
+        Welcome.seen = true
+        welcome.orderOut(nil)
+    }
+
     @objc private func showSettings() {
         if let host = settings.contentView as? NSHostingView<SettingsView> {
             settings.setContentSize(host.fittingSize)
@@ -431,6 +473,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ListenerDelegate, NSMe
         check.target = self
         menu.addItem(check)
         menu.addItem(.separator())
+
+        let tour = NSMenuItem(title: "Show welcome…", action: #selector(showWelcome), keyEquivalent: "")
+        tour.target = self
+        menu.addItem(tour)
 
         let set = NSMenuItem(title: "Settings…", action: #selector(showSettings), keyEquivalent: ",")
         set.target = self
@@ -603,13 +649,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ListenerDelegate, NSMe
         }
     }
 
+    /// A latched pass holds the microphone open with nothing held down. Walk
+    /// away and it stays open — a battery and privacy cost with no upside.
+    private var idleEnd: DispatchWorkItem?
+
+    private func armIdleTimeout() {
+        idleEnd?.cancel()
+        let w = DispatchWorkItem { [weak self] in
+            guard let self, self.session.engagedNow, self.latched else { return }
+            Log.say("pass · ended after 5 minutes with nothing said")
+            self.endPass()
+        }
+        idleEnd = w
+        DispatchQueue.main.asyncAfter(deadline: .now() + 300, execute: w)
+    }
+
     private func startPass() {
         session.latched = false
         session.engaged()
         listener.engage()
+        armIdleTimeout()
     }
 
     private func endPass() {
+        idleEnd?.cancel()
         session.latched = false
         session.released()
         Task {
@@ -625,7 +688,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ListenerDelegate, NSMe
         Task { @MainActor in self.rebuildMenu() }
     }
 
-    func listener(volatile text: String) { session.transcript = text }
+    func listener(volatile text: String) {
+        session.transcript = text
+        if !text.isEmpty {
+            armIdleTimeout()
+            if !Welcome.seen { Welcome.shared.heardSomething = true }
+        }
+    }
 
     func listener(level: Double) { session.level = level }
 
@@ -804,6 +873,141 @@ if args.contains("--selftest") {
     }
     NSApplication.shared.run()
 }
+if args.contains("--loopback") {
+    // The complete chain including the microphone: speak through the
+    // speakers, listen with the real input, report what came back.
+    _ = NSApplication.shared
+    MainActor.assumeIsolated {
+        final class Sink: ListenerDelegate {
+            var text = ""
+            var peak = 0.0
+            func listener(volatile t: String) {}
+            func listener(finished u: Utterance) { text = u.text }
+            func listener(state s: Listener.State) {}
+            func listener(level: Double) { peak = max(peak, level) }
+        }
+        let sink = Sink()
+        let l = Listener()
+        l.delegate = sink
+        Task {
+            let phrase = "the spacing under this heading is far too tight"
+            let file = "/tmp/ambient-loop.aiff"
+            let say = Process()
+            say.executableURL = URL(fileURLWithPath: "/usr/bin/say")
+            say.arguments = ["-o", file, phrase]
+            try? say.run(); say.waitUntilExit()
+
+            await l.prepare()
+            l.engage()
+            try? await Task.sleep(nanoseconds: 300_000_000)
+
+            let play = Process()
+            play.executableURL = URL(fileURLWithPath: "/usr/bin/afplay")
+            play.arguments = [file]
+            try? play.run()
+            play.waitUntilExit()
+
+            try? await Task.sleep(nanoseconds: 600_000_000)
+            await l.release()
+            print("mic level peak · \(String(format: "%.3f", sink.peak))")
+            print("heard          · “\(sink.text)”")
+            if sink.text.isEmpty {
+                print("FAIL · microphone audio produced no transcript")
+                exit(1)
+            }
+            print("PASS · full chain works, microphone included")
+            exit(0)
+        }
+    }
+    NSApplication.shared.run()
+}
+
+if args.contains("--mic") {
+    // Is the input device actually delivering signal? Everything downstream
+    // is proven; this is the last unknown.
+    _ = NSApplication.shared
+    MainActor.assumeIsolated {
+        let engine = AVAudioEngine()
+        let input = engine.inputNode
+        let fmt = input.outputFormat(forBus: 0)
+        print("input device · \(Int(fmt.sampleRate)) Hz · \(fmt.channelCount) ch")
+        var peak: Float = 0
+        var frames = 0
+        input.installTap(onBus: 0, bufferSize: 4096, format: fmt) { buf, _ in
+            frames += Int(buf.frameLength)
+            guard let ch = buf.floatChannelData?[0] else { return }
+            for i in 0..<Int(buf.frameLength) { peak = max(peak, abs(ch[i])) }
+        }
+        engine.prepare()
+        do { try engine.start() } catch {
+            print("FAIL · engine would not start: \(error)"); exit(1)
+        }
+        print("listening 4s — say something")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
+            engine.stop()
+            print("frames · \(frames)")
+            print("peak   · \(String(format: "%.4f", peak))")
+            if frames == 0 { print("FAIL · no buffers at all from the input device") }
+            else if peak < 0.001 { print("FAIL · buffers arriving but SILENT (peak \(peak))") }
+            else { print("PASS · microphone is delivering signal") }
+            exit(peak < 0.001 ? 1 : 0)
+        }
+    }
+    NSApplication.shared.run()
+}
+
+if args.contains("--probe-live") {
+    // The same audio, but through the real Listener: prepare → engage →
+    // feed → release. Isolates everything except the microphone hardware.
+    _ = NSApplication.shared
+    MainActor.assumeIsolated {
+        final class Sink: ListenerDelegate {
+            var text = ""
+            var words = 0
+            func listener(volatile t: String) {}
+            func listener(finished u: Utterance) { text = u.text; words = u.words.count }
+            func listener(state s: Listener.State) { print("  state · \(s)") }
+            func listener(level: Double) {}
+        }
+        let sink = Sink()
+        let l = Listener()
+        l.delegate = sink
+        Task {
+            let phrase = "the spacing under this heading is too tight"
+            let out = "/tmp/ambient-probe.aiff"
+            let say = Process()
+            say.executableURL = URL(fileURLWithPath: "/usr/bin/say")
+            say.arguments = ["-o", out, phrase]
+            try? say.run(); say.waitUntilExit()
+
+            await l.prepare()
+            l.engage()
+            let fed = l.inject(URL(fileURLWithPath: out))
+            print("  fed \(fed) frames through the live feed")
+            try? await Task.sleep(nanoseconds: 400_000_000)
+            await l.release()
+            print("  heard: “\(sink.text)” (\(sink.words) words)")
+            if sink.text.isEmpty {
+                print("FAIL · live path swallowed the audio")
+                exit(1)
+            }
+            print("PASS · live path works")
+            exit(0)
+        }
+    }
+    NSApplication.shared.run()
+}
+
+if args.contains("--probe") {
+    _ = NSApplication.shared
+    MainActor.assumeIsolated {
+        let phrase = Array(args.drop(while: { $0 != "--probe" }).dropFirst())
+            .first(where: { !$0.hasPrefix("--") }) ?? "the spacing under this heading is too tight"
+        Task { exit(await Probe.run(phrase) ? 0 : 1) }
+    }
+    NSApplication.shared.run()
+}
+
 if args.contains("--recover") {
     // Proves the listener rebuilds itself instead of sitting there looking
     // healthy — the "it stops working until I restart it" bug.
@@ -847,6 +1051,12 @@ if args.contains("--check") {
     }
     NSApplication.shared.run()
 }
+if args.contains("--render-welcome"), let i = args.firstIndex(of: "--render-welcome"), i + 1 < args.count {
+    _ = NSApplication.shared
+    let step = Int(args.dropFirst(i + 2).first ?? "0") ?? 0
+    MainActor.assumeIsolated { Type.register(); Render.welcome(path: args[i + 1], step: step) }
+}
+
 if args.contains("--render-settings"), let i = args.firstIndex(of: "--render-settings"), i + 1 < args.count {
     _ = NSApplication.shared
     MainActor.assumeIsolated { Type.register(); Render.settings(path: args[i + 1]) }

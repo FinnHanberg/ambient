@@ -5,6 +5,19 @@ import SwiftUI
 /// The surface can then be designed and reviewed without speaking to it.
 enum Render {
     @MainActor
+    static func welcome(path: String, step: Int) {
+        Welcome.shared.step = step
+        let v = WelcomeView(s: Session(), done: {}, scrolls: false)
+        let r = ImageRenderer(content: v)
+        r.scale = 2
+        guard let img = r.nsImage, let tiff = img.tiffRepresentation,
+              let rep = NSBitmapImageRep(data: tiff),
+              let png = rep.representation(using: .png, properties: [:]) else { exit(1) }
+        try? png.write(to: URL(fileURLWithPath: path))
+        print("rendered \(path)"); exit(0)
+    }
+
+    @MainActor
     static func settings(path: String) {
         let v = SettingsView(s: Session(), close: {}, scrolls: false)
         let r = ImageRenderer(content: v)
