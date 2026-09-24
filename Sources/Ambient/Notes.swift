@@ -77,6 +77,15 @@ final class Notes: ObservableObject {
         save()
     }
 
+    /// One note, in the same shape as the batch — so a single item pasted
+    /// somewhere reads exactly like an item from a full pass.
+    func one(_ n: Note, clean: Bool) -> String {
+        var out = clean ? Enhance.clean(n) : n.text
+        for shot in n.shots { out += "\n   screenshot: \(shot)" }
+        if !n.context.isEmpty { out += "\n   context: \(n.context)" }
+        return out
+    }
+
     /// The batch, as something a coding agent can act on.
     func bundle() -> String {
         guard !items.isEmpty else { return "" }

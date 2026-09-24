@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ambient Motion Storyboards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --bg:#f7f7f8; --card:#fff; --fg:#101214; --muted:#5b626a; --faint:#8d949c;
+    --border:#e3e5e8; --accent:#2c5fd6;
+    --app:#0e0e0f; --hair:rgba(255,255,255,.12); --rule:rgba(255,255,255,.07);
+    --on:rgba(255,255,255,.96); --on2:rgba(255,255,255,.55); --on3:rgba(255,255,255,.3);
+    --live:#c8553d;
+    --ease:cubic-bezier(.32,.72,0,1);
+    --f:"Inter",-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#0a0b0c;--card:#131417;--fg:#eef0f2;--muted:#9ba2aa;--faint:#6d747c;--border:#23262a;--accent:#8fb0ff}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+  .wrap{max-width:1120px;margin:0 auto;padding:64px 28px 120px}
+  .eyebrow{font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);margin:0 0 16px}
+  h1{font-size:clamp(32px,5vw,44px);font-weight:700;letter-spacing:-.03em;line-height:1.05;margin:0 0 14px}
+  .lead{font-size:17px;color:var(--muted);max-width:60ch;margin:0 0 26px}
+  p{margin:0 0 12px;color:var(--muted);max-width:66ch}
+  h3{font-size:14px;font-weight:600;margin:0 0 3px}
+
+  .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:5;
+       background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);
+       padding:12px 0;margin-bottom:24px;border-bottom:1px solid var(--border)}
+  .btn{font-size:13px;font-weight:500;padding:7px 15px;border-radius:8px;border:1px solid var(--border);
+       background:var(--card);color:var(--fg);cursor:pointer;transition:transform .12s var(--ease),background .15s}
+  .btn:hover{background:color-mix(in srgb,var(--card) 80%,var(--fg) 6%)}
+  .btn:active{transform:scale(.97)}
+  .btn.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+  .hint{font-size:12.5px;color:var(--faint)}
+
+  .bench{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:18px}
+  .spec{border:1px solid var(--border);border-radius:10px;background:var(--card);overflow:hidden;display:flex;flex-direction:column}
+  .stage{background:#08090a;min-height:168px;display:grid;place-items:center;position:relative;overflow:hidden}
+  .stage::after{content:attr(data-beat);position:absolute;left:12px;bottom:10px;font-size:10px;
+                color:rgba(255,255,255,.28);letter-spacing:.06em}
+
+  /* storyboard strip */
+  .strip{display:flex;gap:1px;background:var(--border)}
+  .frame{flex:1;background:var(--card);padding:8px 6px;text-align:center;cursor:pointer;
+         transition:background .18s var(--ease)}
+  .frame.now{background:color-mix(in srgb,var(--card) 70%,var(--fg) 10%)}
+  .frame .t{font-size:9.5px;color:var(--faint)}
+  .frame .l{font-size:10.5px;font-weight:500;margin-top:1px}
+  .cap{padding:12px 16px 15px;border-top:1px solid var(--border)}
+  .cap p{font-size:12.5px;margin:3px 0 0}
+  .cap .row{display:flex;align-items:center;gap:8px}
+  .play{width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:transparent;
+        color:var(--fg);cursor:pointer;display:grid;place-items:center;font-size:9px;flex:none}
+  .play:hover{background:color-mix(in srgb,var(--card) 70%,var(--fg) 8%)}
+
+  /* ── app primitives ─────────────────────────────── */
+  .pill{font-size:12px;font-weight:500;padding:6px 14px;border-radius:999px;border:1px solid var(--hair);
+        background:rgba(255,255,255,.06);color:var(--on2);display:inline-flex;align-items:center;gap:6px;
+        transition:transform .16s var(--ease),background .2s var(--ease),color .2s var(--ease)}
+  .pill.strong{background:rgba(255,255,255,.92);color:#0e0e0f;border-color:transparent}
+
+  [data-state="press"] .pill.strong{transform:scale(.95)}
+  [data-state="done"] .pill.strong{background:rgba(255,255,255,.92)}
+  .pill .lbl{transition:opacity .18s var(--ease)}
+  [data-state="done"] .pill .lbl{opacity:0}
+  .pill .tick{position:absolute;opacity:0;transition:opacity .2s var(--ease) .05s}
+  [data-state="done"] .pill .tick{opacity:1}
+  .pill{position:relative}
+
+  .sw{width:38px;height:22px;border-radius:999px;background:rgba(255,255,255,.12);position:relative;
+      transition:background .24s var(--ease)}
+  .sw::after{content:"";position:absolute;top:2.5px;left:2.5px;width:17px;height:17px;border-radius:50%;
+             background:#9e9e9e;transition:transform .26s var(--ease),background .24s var(--ease),width .2s var(--ease)}
+  [data-state="squish"] .sw::after{width:22px}
+  [data-state="on"] .sw,[data-state="rest2"] .sw{background:rgba(255,255,255,.82)}
+  [data-state="on"] .sw::after,[data-state="rest2"] .sw::after{transform:translateX(16px);background:#141414}
+
+  .meter{width:190px;height:3px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden}
+  .meter i{display:block;height:100%;width:100%;background:rgba(255,255,255,.72);
+           transform-origin:left;transition:transform 1.1s var(--ease),background .3s}
+  [data-state="d1"] .meter i{transform:scaleX(.7)}
+  [data-state="d2"] .meter i{transform:scaleX(.35)}
+  [data-state="low"] .meter i{transform:scaleX(.08);background:var(--live)}
+
+  .wave{display:flex;align-items:center;gap:3px;height:34px}
+  .wave i{width:3px;border-radius:2px;background:rgba(255,255,255,.82);height:4px;
+          transition:height .14s var(--ease)}
+  [data-state="soft"] .wave i:nth-child(1){height:8px}
+  [data-state="soft"] .wave i:nth-child(2){height:13px}
+  [data-state="soft"] .wave i:nth-child(3){height:10px}
+  [data-state="soft"] .wave i:nth-child(4){height:15px}
+  [data-state="soft"] .wave i:nth-child(5){height:7px}
+  [data-state="loud"] .wave i:nth-child(1){height:18px}
+  [data-state="loud"] .wave i:nth-child(2){height:30px}
+  [data-state="loud"] .wave i:nth-child(3){height:24px}
+  [data-state="loud"] .wave i:nth-child(4){height:32px}
+  [data-state="loud"] .wave i:nth-child(5){height:16px}
+
+  .chip{display:inline-flex;align-items:center;gap:7px;font-size:11px;color:var(--on2);
+        border:1px solid var(--hair);background:rgba(255,255,255,.05);border-radius:999px;padding:5px 11px;
+        transition:opacity .18s var(--ease),transform .22s var(--ease)}
+  .chip .ring{width:8px;height:8px;border-radius:50%;border:1.5px solid rgba(255,255,255,.5);
+              transition:transform .3s var(--ease)}
+  [data-state="seek"] .chip{opacity:.35;transform:translateY(3px)}
+  [data-state="lock"] .chip .ring{transform:scale(1.35)}
+
+  .badge{font-size:11px;font-weight:500;color:var(--on2);border:1px solid var(--hair);
+         border-radius:999px;padding:3px 10px;display:inline-block;
+         transition:transform .2s var(--ease)}
+  [data-state="bump"] .badge{transform:scale(1.22)}
+
+  .keys{display:flex;gap:8px}
+  .key{min-width:36px;height:30px;border-radius:8px;background:rgba(255,255,255,.07);
+       border:1px solid var(--hair);color:rgba(255,255,255,.85);display:grid;place-items:center;
+       font-size:13px;font-weight:500;padding:0 9px;
+       transition:transform .13s var(--ease),background .18s var(--ease)}
+  [data-state="down"] .key{transform:translateY(2px);background:rgba(255,255,255,.18)}
+  [data-state="hold"] .key{background:rgba(255,255,255,.14)}
+
+  .xb{width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.07);color:var(--on3);
+      display:grid;place-items:center;font-size:10px;
+      transition:transform .2s var(--ease),opacity .24s var(--ease)}
+  .card{width:190px;border:1px solid var(--hair);border-radius:12px;background:var(--app);
+        padding:12px;display:flex;align-items:center;gap:9px;
+        transition:transform .3s var(--ease),opacity .3s var(--ease)}
+  [data-state="hover"] .xb{transform:scale(1.12);background:rgba(255,255,255,.14)}
+  [data-state="gone"] .card{transform:scale(.94);opacity:0}
+
+  .grow{background:var(--app);border:1px solid var(--hair);border-radius:12px;overflow:hidden;
+        width:44px;height:26px;display:flex;align-items:center;gap:9px;padding:0 10px;
+        transition:width .42s var(--ease),height .42s var(--ease)}
+  .grow > *{opacity:0;transition:opacity .2s var(--ease) .12s;white-space:nowrap;font-size:12px;color:var(--on2)}
+  [data-state="open"] .grow{width:240px;height:52px}
+  [data-state="open"] .grow > *{opacity:1}
+  [data-state="full"] .grow{width:280px;height:88px}
+  [data-state="full"] .grow > *{opacity:1}
+
+  .shot{width:150px;height:96px;border-radius:7px;border:1px solid var(--hair);position:relative;
+        background:linear-gradient(135deg,#2b2f36,#15171b)}
+  .shot .ring2{position:absolute;left:58%;top:44%;width:14px;height:14px;margin:-7px 0 0 -7px;
+               border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 2px rgba(0,0,0,.5);
+               opacity:0;transform:scale(2.6);transition:opacity .22s var(--ease),transform .34s var(--ease)}
+  [data-state="land"] .shot .ring2,[data-state="hold2"] .shot .ring2{opacity:1;transform:scale(1)}
+  [data-state="hold2"] .shot .ring2{transition-duration:.2s}
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition-duration:.001ms!important;animation-duration:.001ms!important}
+  }
+  footer{margin-top:76px;padding-top:20px;border-top:1px solid var(--border);font-size:13px;color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Ambient · motion storyboards</p>
+  <h1>Ten seconds each,<br>nothing wasted</h1>
+  <p class="lead">Every primitive in the app as a timed sequence. The strip under each stage is the storyboard — click any frame to jump to that beat. Sound is synthesised in the page, so nothing loads and nothing is ever louder than a keystroke.</p>
+
+  <div class="bar">
+    <button class="btn" id="playAll">Play all</button>
+    <button class="btn" id="sound">Sound off</button>
+    <span class="hint" id="status">Click a frame to scrub. Loops every 10 seconds.</span>
+  </div>
+
+  <div class="bench" id="bench"></div>
+
+  <footer>Ambient motion storyboards · all motion 130–420ms on <code>cubic-bezier(.32,.72,0,1)</code> · sound is procedural, peak −26 dBFS</footer>
+</div>
+
+<script>
+/* ── micro sound: synthesised, tiny, never louder than a keystroke ───── */
+const Sound = (() => {
+  let ctx = null, on = false;
+  const start = () => { if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === "suspended") ctx.resume(); };
+  const env = (node, peak, attack, decay) => {
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(peak, ctx.currentTime + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + attack + decay);
+    node.connect(g); g.connect(ctx.destination);
+    return g;
+  };
+  const tone = (freq, peak, dur, type = "sine", slideTo) => {
+    const o = ctx.createOscillator();
+    o.type = type; o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    env(o, peak, 0.004, dur);
+    o.start(); o.stop(ctx.currentTime + dur + 0.05);
+  };
+  const noise = (peak, dur, from, to) => {
+    const n = ctx.sampleRate * dur;
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = "bandpass";
+    f.frequency.setValueAtTime(from, ctx.currentTime);
+    f.frequency.exponentialRampToValueAtTime(to, ctx.currentTime + dur);
+    f.Q.value = 1.2;
+    src.connect(f); env(f, peak, 0.003, dur);
+    src.start();
+  };
+  const voices = {
+    tick:  () => tone(2100, 0.035, 0.03, "sine"),
+    click: () => noise(0.030, 0.035, 2600, 1400),
+    pop:   () => tone(420, 0.045, 0.09, "sine", 760),
+    drop:  () => tone(520, 0.040, 0.10, "sine", 260),
+    thunk: () => tone(180, 0.050, 0.10, "sine", 120),
+    swish: () => noise(0.026, 0.14, 700, 2600),
+    seat:  () => tone(900, 0.030, 0.06, "triangle", 1250)
+  };
+  return {
+    toggle() { on = !on; if (on) start(); return on; },
+    get enabled() { return on; },
+    play(name) { if (!on || !ctx || !voices[name]) return; try { voices[name](); } catch (e) {} }
+  };
+})();
+
+/* ── the storyboards ─────────────────────────────────────────────────── */
+const SPECS = [
+  { id:"action", title:"Action", note:"Press, then the label swaps for a tick in place. The button never moves position — only its contents change, so the eye stays put.",
+    dom:`<span class="pill strong"><span class="lbl">Copy brief</span><span class="tick">✓ Copied</span></span>`,
+    beats:[ {t:0,s:"rest",l:"rest"}, {t:2600,s:"press",l:"press",sfx:"click"},
+            {t:2900,s:"rest",l:"release",sfx:"tick"}, {t:3300,s:"done",l:"confirm",sfx:"seat"},
+            {t:7600,s:"rest",l:"reset"} ] },
+
+  { id:"switch", title:"Switch", note:"The knob stretches as it travels and settles back — the only liberty taken anywhere in the app, and it is two pixels wide.",
+    dom:`<span class="sw"></span>`,
+    beats:[ {t:0,s:"rest",l:"off"}, {t:2400,s:"squish",l:"press",sfx:"tick"},
+            {t:2560,s:"on",l:"travel",sfx:"pop"}, {t:6000,s:"rest2",l:"settled"},
+            {t:8200,s:"rest",l:"off again",sfx:"drop"} ] },
+
+  { id:"meter", title:"Allowance", note:"Drains in steps, never continuously — each step is one export. It only takes colour at the very end, and that is the single accent in the product.",
+    dom:`<span class="meter"><i></i></span>`,
+    beats:[ {t:0,s:"rest",l:"full"}, {t:2200,s:"d1",l:"−30",sfx:"tick"},
+            {t:4600,s:"d2",l:"−35",sfx:"tick"}, {t:7000,s:"low",l:"last one",sfx:"drop"},
+            {t:9400,s:"rest",l:"renewed",sfx:"seat"} ] },
+
+  { id:"wave", title:"Waveform", note:"Bound to level, not to a clock. It rests flat, which is what makes a dead microphone visible instead of invisible.",
+    dom:`<span class="wave"><i></i><i></i><i></i><i></i><i></i></span>`,
+    beats:[ {t:0,s:"rest",l:"silent"}, {t:1800,s:"soft",l:"breath",sfx:"swish"},
+            {t:3000,s:"loud",l:"speech"}, {t:5200,s:"soft",l:"pause"},
+            {t:6400,s:"loud",l:"speech"}, {t:8600,s:"rest",l:"silent"} ] },
+
+  { id:"chip", title:"Binding chip", note:"Dips and dims while the cursor moves, then the ring pulses once when it locks on. You see what “this” means before you say it.",
+    dom:`<span class="chip"><span class="ring"></span> link “Asset Supply©”</span>`,
+    beats:[ {t:0,s:"rest",l:"bound"}, {t:2400,s:"seek",l:"moving",sfx:"swish"},
+            {t:4200,s:"lock",l:"lock on",sfx:"seat"}, {t:4700,s:"rest",l:"bound"},
+            {t:7400,s:"seek",l:"moving",sfx:"swish"}, {t:8800,s:"rest",l:"bound",sfx:"seat"} ] },
+
+  { id:"badge", title:"Count", note:"One scale bump per note, no number roll. The value changes at the peak of the bump so the eye lands on the new figure.",
+    dom:`<span class="badge" id="cnt">4</span>`,
+    beats:[ {t:0,s:"rest",l:"4"}, {t:2200,s:"bump",l:"+1",sfx:"tick",n:5},
+            {t:2500,s:"rest",l:"5"}, {t:5200,s:"bump",l:"+1",sfx:"tick",n:6},
+            {t:5500,s:"rest",l:"6"}, {t:8000,s:"bump",l:"+1",sfx:"tick",n:7}, {t:8300,s:"rest",l:"7"} ] },
+
+  { id:"keys", title:"Chord", note:"Both caps depress together and stay lit while a pass runs. The only place the interface shows a held state.",
+    dom:`<span class="keys"><span class="key">⌃</span><span class="key">fn</span></span>`,
+    beats:[ {t:0,s:"rest",l:"idle"}, {t:2200,s:"down",l:"tap",sfx:"thunk"},
+            {t:2420,s:"hold",l:"recording"}, {t:7000,s:"down",l:"tap",sfx:"thunk"},
+            {t:7220,s:"rest",l:"finished",sfx:"drop"} ] },
+
+  { id:"close", title:"Dismiss", note:"The target grows slightly under the pointer, then the whole card scales down and fades. Nothing slides off-screen — it leaves from where it is.",
+    dom:`<div class="card"><span style="font-size:12px;color:var(--on2)">3 notes</span><span class="xb" style="margin-left:auto">✕</span></div>`,
+    beats:[ {t:0,s:"rest",l:"resting"}, {t:2600,s:"hover",l:"aim",sfx:"tick"},
+            {t:3600,s:"gone",l:"dismiss",sfx:"swish"}, {t:7000,s:"rest",l:"return",sfx:"pop"} ] },
+
+  { id:"grow", title:"Panel", note:"One object at three sizes rather than three panels. Contents fade in after the box has finished moving, never during.",
+    dom:`<div class="grow"><span class="wave" style="height:14px"><i></i><i></i><i></i></span><span>the spacing is too tight</span></div>`,
+    beats:[ {t:0,s:"rest",l:"closed"}, {t:2000,s:"open",l:"listening",sfx:"swish"},
+            {t:4600,s:"full",l:"transcript",sfx:"seat"}, {t:8000,s:"rest",l:"closed",sfx:"drop"} ] },
+
+  { id:"ring", title:"Ring lands", note:"The mark arrives by contracting onto the target, so the motion itself points. This is the one animation that carries information rather than polish.",
+    dom:`<div class="shot"><span class="ring2"></span></div>`,
+    beats:[ {t:0,s:"rest",l:"crop"}, {t:2400,s:"land",l:"arrive",sfx:"seat"},
+            {t:5200,s:"hold2",l:"marked"}, {t:8400,s:"rest",l:"clear",sfx:"drop"} ] }
+];
+
+/* ── build ───────────────────────────────────────────────────────────── */
+const LOOP = 10000;
+const bench = document.getElementById("bench");
+const cards = [];
+
+for (const spec of SPECS) {
+  const el = document.createElement("div");
+  el.className = "spec";
+  el.innerHTML = `
+    <div class="stage" data-state="rest" data-beat="0.0s · rest">${spec.dom}</div>
+    <div class="strip">${spec.beats.map((b,i)=>`
+      <button class="frame" data-i="${i}">
+        <div class="t">${(b.t/1000).toFixed(1)}s</div>
+        <div class="l">${b.l}</div>
+      </button>`).join("")}</div>
+    <div class="cap">
+      <div class="row"><button class="play" title="Play">▶</button><h3>${spec.title}</h3></div>
+      <p>${spec.note}</p>
+    </div>`;
+  bench.appendChild(el);
+
+  const stage = el.querySelector(".stage");
+  const frames = [...el.querySelectorAll(".frame")];
+  const playBtn = el.querySelector(".play");
+  const card = { spec, stage, frames, playing:false, timers:[], playBtn };
+
+  const apply = (i, withSound) => {
+    const b = spec.beats[i];
+    stage.dataset.state = b.s;
+    stage.dataset.beat = `${(b.t/1000).toFixed(1)}s · ${b.l}`;
+    frames.forEach((f,j)=>f.classList.toggle("now", j===i));
+    if (b.n !== undefined) { const c = stage.querySelector("#cnt"); if (c) c.textContent = b.n; }
+    if (withSound && b.sfx) Sound.play(b.sfx);
+  };
+  card.apply = apply;
+
+  const stop = () => { card.timers.forEach(clearTimeout); card.timers = []; card.playing = false; playBtn.textContent = "▶"; };
+  const run = () => {
+    stop(); card.playing = true; playBtn.textContent = "■";
+    spec.beats.forEach((b,i)=>card.timers.push(setTimeout(()=>apply(i,true), b.t)));
+    card.timers.push(setTimeout(run, LOOP));
+  };
+  card.run = run; card.stop = stop;
+
+  playBtn.addEventListener("click", ()=>{ card.playing ? stop() : run(); });
+  frames.forEach((f,i)=>f.addEventListener("click", ()=>{ stop(); apply(i,true); }));
+  apply(0,false);
+  cards.push(card);
+}
+
+/* ── controls ────────────────────────────────────────────────────────── */
+const playAll = document.getElementById("playAll");
+const soundBtn = document.getElementById("sound");
+const status = document.getElementById("status");
+let allOn = false;
+
+playAll.addEventListener("click", () => {
+  allOn = !allOn;
+  playAll.textContent = allOn ? "Stop all" : "Play all";
+  playAll.classList.toggle("on", allOn);
+  cards.forEach(c => allOn ? c.run() : c.stop());
+  status.textContent = allOn ? "Ten seconds, looping." : "Click a frame to scrub. Loops every 10 seconds.";
+});
+
+soundBtn.addEventListener("click", () => {
+  const on = Sound.toggle();
+  soundBtn.textContent = on ? "Sound on" : "Sound off";
+  soundBtn.classList.toggle("on", on);
+  if (on) Sound.play("seat");
+});
+</script>
+</body>
+</html>

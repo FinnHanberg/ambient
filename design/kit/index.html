@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ambient Kit</title>
+<style>
+  :root{
+    --background:#fafafa; --card:#ffffff; --foreground:#141414;
+    --muted:#f4f4f5; --muted-foreground:#71717a; --border:#e6e6e6;
+    --accent:#141414; --radius:10px;
+    --sans:"Inter","Inter var",-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--background); color:var(--foreground);
+    font:14px/1.45 var(--sans); -webkit-font-smoothing:antialiased;
+    font-variant-numeric:tabular-nums;
+  }
+  header{
+    display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+    padding:22px 28px 18px; border-bottom:1px solid var(--border); background:var(--card);
+  }
+  header h1{font-size:16px;font-weight:600;letter-spacing:0}
+  header p{font-size:13px;color:var(--muted-foreground)}
+  header .sp{flex:1}
+
+  main{display:grid; grid-template-columns:minmax(0,1fr) 268px; gap:0; align-items:start}
+  @media (max-width:900px){ main{grid-template-columns:minmax(0,1fr)} aside{border-left:0!important;border-top:1px solid var(--border)} }
+
+  section.stage{padding:28px}
+  .frame{
+    position:relative; width:100%; max-width:760px; aspect-ratio:8/5;
+    border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;
+    background:#0e0e0f; cursor:grab; touch-action:none; user-select:none;
+  }
+  .frame.dragging{cursor:grabbing}
+  .frame canvas{display:block;width:100%;height:100%}
+  .hint{
+    position:absolute; left:12px; bottom:10px; font-size:11px; color:rgba(255,255,255,.34);
+    pointer-events:none; transition:opacity .2s ease-out;
+  }
+  .frame:hover .hint{opacity:0}
+
+  .transport{
+    display:flex; align-items:center; gap:12px; max-width:760px; margin-top:14px;
+  }
+  .rail{
+    position:relative; flex:1; height:22px; cursor:pointer; touch-action:none;
+  }
+  .rail::before{
+    content:""; position:absolute; left:0; right:0; top:10px; height:1.5px;
+    background:var(--border); border-radius:1px;
+  }
+  .rail .head{
+    position:absolute; top:4px; width:2px; height:14px; border-radius:1px;
+    background:var(--foreground); transform:translateX(-1px);
+  }
+  .rail .rest{
+    position:absolute; top:7px; width:1px; height:8px; background:var(--muted-foreground);
+    opacity:.5;
+  }
+
+  button{
+    font:inherit; font-size:13px; color:var(--foreground); background:var(--card);
+    border:1px solid var(--border); border-radius:8px; padding:6px 12px; cursor:pointer;
+    transition:background .15s ease-out, border-color .15s ease-out;
+  }
+  button:hover{background:var(--muted)}
+  button[data-on="1"]{background:var(--foreground); color:var(--card); border-color:var(--foreground)}
+
+  .readout{
+    display:flex; align-items:center; gap:8px; max-width:760px; margin-top:14px;
+    padding:10px 12px; border:1px solid var(--border); border-radius:8px; background:var(--card);
+  }
+  .readout code{font:inherit; font-size:13px; color:var(--muted-foreground); flex:1;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+
+  /* ── contact sheet ─────────────────────────────────────────────────────── */
+  .sheet{
+    margin-top:30px; padding-top:22px; border-top:1px solid var(--border);
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(184px,1fr)); gap:14px;
+  }
+  .cell{
+    border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;
+    background:var(--card); cursor:pointer; text-align:left;
+    transition:border-color .15s ease-out, box-shadow .15s ease-out;
+  }
+  .cell:hover{border-color:#d0d0d0; box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .cell[aria-selected="true"]{border-color:var(--foreground); box-shadow:0 0 0 1px var(--foreground)}
+  .cell canvas{display:block; width:100%; aspect-ratio:8/5; background:#0e0e0f}
+  .cell .meta{padding:8px 10px 9px; border-top:1px solid var(--border)}
+  .cell .meta b{display:block;font-size:12.5px;font-weight:500}
+  .cell .meta span{display:block;font-size:11px;color:var(--muted-foreground);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* ── the rail of tokens ────────────────────────────────────────────────── */
+  aside{
+    border-left:1px solid var(--border); background:var(--card);
+    min-height:100%; padding:24px 20px 40px; position:sticky; top:0;
+  }
+  aside h2{font-size:11px; font-weight:500; color:var(--muted-foreground);
+    letter-spacing:.06em; text-transform:uppercase; margin-bottom:12px}
+  aside h2:not(:first-of-type){margin-top:26px}
+  .tok{display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:6px 0; border-bottom:1px solid var(--border)}
+  .tok:last-of-type{border-bottom:0}
+  .tok label{font-size:13px; color:var(--muted-foreground)}
+  .tok .val{
+    font-size:13px; font-variant-numeric:tabular-nums; cursor:ew-resize;
+    padding:2px 8px; border-radius:6px; border:1px solid transparent; user-select:none;
+    touch-action:none; min-width:58px; text-align:right;
+  }
+  .tok .val:hover{border-color:var(--border); background:var(--muted)}
+  .note{font-size:12px; color:var(--muted-foreground); margin-top:14px; line-height:1.5}
+  .note b{font-weight:500; color:var(--foreground)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Ambient Kit</h1>
+  <p>Ten controls from the app, drawn as material. One phase parameter each.</p>
+  <span class="sp"></span>
+  <button id="drop" title="What it takes to move this into Compose">Drop into Compose</button>
+</header>
+
+<main>
+  <section class="stage">
+    <div class="frame" id="frame">
+      <canvas id="big"></canvas>
+      <div class="hint">drag → phase · drag ↑ scale · space to play</div>
+    </div>
+
+    <div class="transport">
+      <button id="play" data-on="1">Pause</button>
+      <div class="rail" id="rail"><div class="rest" id="restMark"></div><div class="head" id="head"></div></div>
+      <button id="toRest">Rest</button>
+    </div>
+
+    <div class="readout">
+      <code id="mat">ui:am-chord:0:100</code>
+      <button id="copyMat">Copy</button>
+      <button id="copyPng">PNG</button>
+    </div>
+
+    <div class="sheet" id="sheet"></div>
+  </section>
+
+  <aside>
+    <h2>Frame</h2>
+    <div class="tok"><label>Phase</label><div class="val" data-k="phase">0</div></div>
+    <div class="tok"><label>Scale</label><div class="val" data-k="scale">100</div></div>
+    <div class="tok"><label>Loop</label><div class="val" data-k="dur">2.4s</div></div>
+
+    <h2>Chrome</h2>
+    <div class="tok"><label>Radius</label><div class="val" data-k="radius">12</div></div>
+    <div class="tok"><label>Gutter</label><div class="val" data-k="gutter">18</div></div>
+    <div class="tok"><label>Hairline</label><div class="val" data-k="hair">12%</div></div>
+    <div class="tok"><label>Rule</label><div class="val" data-k="rule">7%</div></div>
+    <div class="tok"><label>Ground</label><div class="val" data-k="ground">14</div></div>
+
+    <p class="note">Every value here is read out of <b>Panel.swift</b>. Drag one and the
+      whole sheet moves with it — the components hold no numbers of their own.</p>
+
+    <h2>Contract</h2>
+    <p class="note">A component is a canvas <b>draw(x, W, H, p, scale)</b> reached as a
+      material string, exactly like a bitmap. It crops, takes the bar, goes under the
+      optic and exports with no special case.</p>
+  </aside>
+</main>
+
+<script type="module">
+import { AMBIENT, A, material } from './ambient-kit.js';
+
+const DPR = () => Math.min(2, window.devicePixelRatio || 1);
+const $ = s => document.querySelector(s);
+
+const S = { i:0, phase:0, scale:100, dur:2.4, playing:true, t0:performance.now(), hover:null };
+
+/* ── painting ──────────────────────────────────────────────────────────── */
+function paint(cv, comp, p, scale){
+  const w = cv.clientWidth, h = cv.clientHeight, d = DPR();
+  if(!w || !h) return;
+  if(cv.width !== Math.round(w*d)){ cv.width = Math.round(w*d); cv.height = Math.round(h*d); }
+  const x = cv.getContext('2d');
+  x.setTransform(d, 0, 0, d, 0, 0);
+  x.fillStyle = A.ground; x.fillRect(0, 0, w, h);
+  comp.draw(x, w, h, p, scale/100);
+}
+
+/* ── the contact sheet ─────────────────────────────────────────────────── */
+const sheet = $('#sheet');
+const cells = AMBIENT.map((c, i) => {
+  const el = document.createElement('button');
+  el.className = 'cell'; el.setAttribute('aria-selected', i === 0);
+  el.innerHTML = `<canvas></canvas><div class="meta"><b></b><span></span></div>`;
+  el.querySelector('b').textContent = c.name;
+  el.querySelector('span').textContent = c.note;
+  el.addEventListener('click', () => select(i));
+  el.addEventListener('pointerenter', () => S.hover = i);
+  el.addEventListener('pointerleave', () => { if(S.hover === i) S.hover = null; });
+  sheet.appendChild(el);
+  return { el, cv: el.querySelector('canvas'), c };
+});
+
+function select(i){
+  S.i = i;
+  cells.forEach((k, j) => k.el.setAttribute('aria-selected', j === i));
+  $('#restMark').style.left = (AMBIENT[i].rest * 100) + '%';
+  sync();
+}
+
+/* ── readouts ──────────────────────────────────────────────────────────── */
+function sync(){
+  const c = AMBIENT[S.i];
+  $('#mat').textContent = material(c.id, S.phase, S.scale);
+  $('#head').style.left = (S.phase * 100) + '%';
+  $('[data-k="phase"]').textContent = Math.round(S.phase * 100);
+  $('[data-k="scale"]').textContent = Math.round(S.scale);
+  $('[data-k="dur"]').textContent = S.dur.toFixed(1) + 's';
+  $('[data-k="radius"]').textContent = A.radius;
+  $('[data-k="gutter"]').textContent = A.gutter;
+  $('[data-k="hair"]').textContent = Math.round(T.hair * 100) + '%';
+  $('[data-k="rule"]').textContent = Math.round(T.rule * 100) + '%';
+  $('[data-k="ground"]').textContent = T.ground;
+}
+
+/* the token values that are written back into A as strings */
+const T = { hair:.12, rule:.07, ground:14 };
+function applyTokens(){
+  A.hair   = `rgba(255,255,255,${T.hair})`;
+  A.rule   = `rgba(255,255,255,${T.rule})`;
+  const g = Math.round(T.ground).toString(16).padStart(2, '0');
+  A.ground = `#${g}${g}${g}`;
+  document.querySelectorAll('.frame, .cell canvas').forEach(e => e.style.background = A.ground);
+}
+
+/* ── the stage, played with a pointer ──────────────────────────────────── */
+const frame = $('#frame'), big = $('#big');
+let drag = null;
+frame.addEventListener('pointerdown', e => {
+  frame.setPointerCapture(e.pointerId);
+  frame.classList.add('dragging');
+  drag = { x:e.clientX, y:e.clientY, phase:S.phase, scale:S.scale };
+  S.playing = false; $('#play').dataset.on = '0'; $('#play').textContent = 'Play';
+});
+frame.addEventListener('pointermove', e => {
+  if(!drag) return;
+  S.phase = Math.min(1, Math.max(0, drag.phase + (e.clientX - drag.x) / frame.clientWidth));
+  S.scale = Math.min(300, Math.max(20, drag.scale - (e.clientY - drag.y) * .4));
+  sync();
+});
+const endDrag = () => { drag = null; frame.classList.remove('dragging'); };
+frame.addEventListener('pointerup', endDrag);
+frame.addEventListener('pointercancel', endDrag);
+
+/* the rail scrubs too */
+const rail = $('#rail');
+const railTo = e => {
+  const r = rail.getBoundingClientRect();
+  S.phase = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+  S.playing = false; $('#play').dataset.on = '0'; $('#play').textContent = 'Play';
+  sync();
+};
+rail.addEventListener('pointerdown', e => { rail.setPointerCapture(e.pointerId); railTo(e); });
+rail.addEventListener('pointermove', e => { if(e.buttons) railTo(e); });
+
+/* ── token drag ────────────────────────────────────────────────────────── */
+const STEP = { phase:.004, scale:.6, dur:.012, radius:.09, gutter:.12, hair:.0016, rule:.0016, ground:.12 };
+const SET = {
+  phase: v => S.phase = Math.min(1, Math.max(0, v)),
+  scale: v => S.scale = Math.min(300, Math.max(20, v)),
+  dur:   v => S.dur   = Math.min(8, Math.max(.4, v)),
+  radius:v => A.radius = Math.round(Math.min(26, Math.max(0, v))),
+  gutter:v => A.gutter = Math.round(Math.min(40, Math.max(4, v))),
+  hair:  v => T.hair  = Math.min(.5, Math.max(0, v)),
+  rule:  v => T.rule  = Math.min(.5, Math.max(0, v)),
+  ground:v => T.ground = Math.round(Math.min(40, Math.max(0, v))),
+};
+const GET = {
+  phase:()=>S.phase, scale:()=>S.scale, dur:()=>S.dur,
+  radius:()=>A.radius, gutter:()=>A.gutter,
+  hair:()=>T.hair, rule:()=>T.rule, ground:()=>T.ground,
+};
+document.querySelectorAll('.val').forEach(el => {
+  const k = el.dataset.k;
+  let d0 = null;
+  el.addEventListener('pointerdown', e => {
+    el.setPointerCapture(e.pointerId); d0 = { x:e.clientX, v:GET[k]() };
+  });
+  el.addEventListener('pointermove', e => {
+    if(!d0) return;
+    SET[k](d0.v + (e.clientX - d0.x) * STEP[k]);
+    applyTokens(); sync();
+  });
+  el.addEventListener('pointerup', () => d0 = null);
+});
+
+/* ── transport ─────────────────────────────────────────────────────────── */
+$('#play').addEventListener('click', () => {
+  S.playing = !S.playing;
+  S.t0 = performance.now() - S.phase * S.dur * 1000;
+  $('#play').dataset.on = S.playing ? '1' : '0';
+  $('#play').textContent = S.playing ? 'Pause' : 'Play';
+});
+$('#toRest').addEventListener('click', () => {
+  S.playing = false; $('#play').dataset.on = '0'; $('#play').textContent = 'Play';
+  S.phase = AMBIENT[S.i].rest; sync();
+});
+addEventListener('keydown', e => {
+  if(e.target.tagName === 'INPUT') return;
+  if(e.code === 'Space'){ e.preventDefault(); $('#play').click(); }
+  if(e.code === 'ArrowRight'){ S.phase = Math.min(1, S.phase + (e.shiftKey ? .1 : .01)); sync(); }
+  if(e.code === 'ArrowLeft'){ S.phase = Math.max(0, S.phase - (e.shiftKey ? .1 : .01)); sync(); }
+  if(e.code === 'ArrowDown'){ select((S.i + 1) % AMBIENT.length); }
+  if(e.code === 'ArrowUp'){ select((S.i - 1 + AMBIENT.length) % AMBIENT.length); }
+});
+
+/* ── export ────────────────────────────────────────────────────────────── */
+const flash = (btn, word) => {
+  const was = btn.textContent; btn.textContent = word;
+  setTimeout(() => btn.textContent = was, 900);
+};
+$('#copyMat').addEventListener('click', async e => {
+  await navigator.clipboard.writeText($('#mat').textContent);
+  flash(e.target, 'Copied');
+});
+$('#copyPng').addEventListener('click', e => {
+  big.toBlob(async b => {
+    try{
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': b })]);
+      flash(e.target, 'Copied');
+    }catch{
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(b);
+      a.download = `${AMBIENT[S.i].id}-${Math.round(S.phase*100)}.png`;
+      a.click(); flash(e.target, 'Saved');
+    }
+  });
+});
+$('#drop').addEventListener('click', async e => {
+  await navigator.clipboard.writeText(
+    "cp ambient-kit.js kit.js ~/'Claude 1'/displace/canvas/src/\n" +
+    "# then in src/components.js:\n" +
+    "import { AMBIENT } from './ambient-kit.js';\n" +
+    "export const COMPONENTS = [ ...COMPONENTS, ...AMBIENT ];");
+  flash(e.target, 'Copied the two lines');
+});
+
+/* ── the loop ──────────────────────────────────────────────────────────── */
+function tick(t){
+  if(S.playing){ S.phase = ((t - S.t0) / (S.dur * 1000)) % 1; sync(); }
+  paint(big, AMBIENT[S.i], S.phase, S.scale);
+  const loop = ((t / (S.dur * 1000)) % 1);
+  cells.forEach((k, i) => {
+    const live = i === S.hover || i === S.i;
+    paint(k.cv, k.c, live ? (i === S.i ? S.phase : loop) : k.c.rest, 100);
+  });
+  requestAnimationFrame(tick);
+}
+
+applyTokens(); select(0); S.t0 = performance.now();
+requestAnimationFrame(tick);
+
+/* the console is part of the instrument: kit.S.phase = .4, kit.A.radius = 4, … */
+window.kit = { S, A, T, AMBIENT, select, sync, applyTokens, material };
+</script>
+</body>
+</html>

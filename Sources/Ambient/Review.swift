@@ -93,58 +93,10 @@ struct Review: View {
     }
 
     private func row(_ i: Int, _ n: Note) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Text("\(i)")
-                .font(Type.meta(10))
-                .foregroundStyle(.white.opacity(0.3))
-                .frame(width: 12, alignment: .trailing)
-                .padding(.top, 3)
-
-            thumb(n)
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(clean ? Enhance.clean(n) : n.text)
-                    .font(Type.ui(13))
-                    .foregroundStyle(.white.opacity(0.94))
-                    .fixedSize(horizontal: false, vertical: true)
-                Text(place(n.context))
-                    .font(Type.meta(10))
-                    .foregroundStyle(.white.opacity(0.32))
-                    .lineLimit(1)
-            }
-            Spacer(minLength: 4)
-
-            Button { notes.remove(n.id) } label: {
-                Image(systemName: "xmark")
-                    .font(.system(size: 9, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.28))
-                    .frame(width: 20, height: 20)
-            }
-            .buttonStyle(.plain)
-            .help("Remove this note")
-        }
-        .padding(.horizontal, Chrome.gutter)
-        .padding(.vertical, 11)
-    }
-
-    @ViewBuilder
-    private func thumb(_ n: Note) -> some View {
-        if let path = n.shots.first, let img = NSImage(contentsOfFile: path) {
-            Image(nsImage: img)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: 76, height: 50)
-                .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 5, style: .continuous)
-                    .strokeBorder(Chrome.hair, lineWidth: 1))
-        } else {
-            RoundedRectangle(cornerRadius: 5, style: .continuous)
-                .fill(.white.opacity(0.04))
-                .frame(width: 76, height: 50)
-                .overlay(Image(systemName: "eye.slash")
-                    .font(.system(size: 10))
-                    .foregroundStyle(.white.opacity(0.22)))
-        }
+        NoteRow(index: i, note: n, clean: clean,
+                copy: { copyOne(n) },
+                copyImage: { copyImage(n) },
+                remove: { notes.remove(n.id) })
     }
 
     // MARK: - Meta
@@ -159,10 +111,6 @@ struct Review: View {
         let rest = n.context[r.lowerBound...]
         let url = rest.split(separator: " ").first.map(String.init) ?? n.app
         return URL(string: url)?.host() ?? url
-    }
-
-    private func place(_ context: String) -> String {
-        context.replacingOccurrences(of: "Google Chrome · ", with: "")
     }
 
     /// What the pass just saved, in the units the user bills in.
@@ -243,8 +191,123 @@ struct Review: View {
         }
     }
 
+    /// A single note, text and picture together on the clipboard. Whatever it
+    /// is pasted into takes the half it understands.
+    private func copyOne(_ n: Note) {
+        let board = NSPasteboard.general
+        board.clearContents()
+        var items: [NSPasteboardWriting] = [notes.one(n, clean: clean && !locked) as NSString]
+        if let path = n.shots.first, let img = NSImage(contentsOfFile: path) {
+            items.append(img)
+        }
+        board.writeObjects(items)
+        usage.spend(1)
+        show("note copied")
+    }
+
+    /// Just the picture — for dropping into a message or a canvas.
+    private func copyImage(_ n: Note) {
+        guard let path = n.shots.first, let img = NSImage(contentsOfFile: path) else {
+            show("no picture on that note"); return
+        }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.writeObjects([img])
+        show("picture copied")
+    }
+
     private func show(_ s: String) {
         flash = s
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) { if flash == s { flash = nil } }
+    }
+}
+
+/// One note. The row-level actions only appear on hover: three buttons on
+/// every row would make a ten-note pass look like a control panel.
+private struct NoteRow: View {
+    let index: Int
+    let note: Note
+    let clean: Bool
+    let copy: () -> Void
+    let copyImage: () -> Void
+    let remove: () -> Void
+
+    @State private var hovering = false
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Text("\(index)")
+                .font(Type.meta(10))
+                .foregroundStyle(.white.opacity(0.3))
+                .frame(width: 12, alignment: .trailing)
+                .padding(.top, 3)
+
+            Button(action: copyImage) { thumb }
+                .buttonStyle(.plain)
+                .help("Copy just the picture")
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(clean ? Enhance.clean(note) : note.text)
+                    .font(Type.ui(13))
+                    .foregroundStyle(.white.opacity(0.94))
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(place(note.context))
+                    .font(Type.meta(10))
+                    .foregroundStyle(.white.opacity(0.32))
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 4)
+
+            HStack(spacing: 2) {
+                if hovering {
+                    Button(action: copy) {
+                        Image(systemName: "doc.on.doc")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.55))
+                            .frame(width: 22, height: 22)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Copy this note and its picture")
+                }
+                Button(action: remove) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(.white.opacity(hovering ? 0.5 : 0.24))
+                        .frame(width: 22, height: 22)
+                }
+                .buttonStyle(.plain)
+                .help("Remove this note")
+            }
+        }
+        .padding(.horizontal, Chrome.gutter)
+        .padding(.vertical, 11)
+        .background(Color.white.opacity(hovering ? 0.03 : 0))
+        .onHover { hovering = $0 }
+        .animation(.easeOut(duration: 0.12), value: hovering)
+    }
+
+    @ViewBuilder
+    private var thumb: some View {
+        if let path = note.shots.first, let img = NSImage(contentsOfFile: path) {
+            Image(nsImage: img)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: 76, height: 50)
+                .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .strokeBorder(.white.opacity(hovering ? 0.3 : 0.12), lineWidth: 1)
+                )
+        } else {
+            RoundedRectangle(cornerRadius: 5, style: .continuous)
+                .fill(.white.opacity(0.04))
+                .frame(width: 76, height: 50)
+                .overlay(Image(systemName: "eye.slash")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.white.opacity(0.22)))
+        }
+    }
+
+    private func place(_ context: String) -> String {
+        context.replacingOccurrences(of: "Google Chrome · ", with: "")
     }
 }

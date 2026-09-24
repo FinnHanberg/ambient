@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ambient Reel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --app:#0a0a0b; --hair:rgba(255,255,255,.14); --rule:rgba(255,255,255,.08);
+    --on:rgba(255,255,255,.96); --on2:rgba(255,255,255,.55); --on3:rgba(255,255,255,.28);
+    --live:#c8553d;
+    --f:"Inter",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;background:var(--app);overflow:hidden}
+  body{font-family:var(--f);color:var(--on);-webkit-font-smoothing:antialiased;
+       font-variant-numeric:tabular-nums}
+  /* deterministic render: nothing may move on its own */
+  *{animation:none!important}
+
+  #stage{position:fixed;inset:0;display:grid;place-items:center}
+  .shot{position:absolute;inset:0;display:grid;place-items:center;opacity:0;will-change:transform,opacity}
+  .inner{display:flex;flex-direction:column;align-items:center;gap:64px}
+
+  .cap{position:fixed;left:90px;bottom:170px;font-size:34px;font-weight:500;
+       letter-spacing:-.01em;color:var(--on2);opacity:0}
+  .step{position:fixed;right:90px;bottom:170px;font-size:26px;color:var(--on3);opacity:0}
+  .bar{position:fixed;left:90px;right:90px;bottom:120px;height:3px;border-radius:3px;
+       background:rgba(255,255,255,.1);overflow:hidden}
+  .bar i{display:block;height:100%;width:100%;background:rgba(255,255,255,.55);
+         transform:scaleX(0);transform-origin:left}
+
+  /* ── primitives, scaled for 1080×1920 ─────────────────────── */
+  .keys{display:flex;gap:26px}
+  .key{min-width:130px;height:110px;border-radius:26px;background:rgba(255,255,255,.07);
+       border:2px solid var(--hair);display:grid;place-items:center;font-size:46px;font-weight:500}
+
+  .wave{display:flex;align-items:center;gap:14px;height:210px}
+  .wave i{width:14px;border-radius:8px;background:rgba(255,255,255,.88);height:22px}
+
+  .chip{display:inline-flex;align-items:center;gap:22px;font-size:34px;color:var(--on2);
+        border:2px solid var(--hair);background:rgba(255,255,255,.05);border-radius:999px;
+        padding:22px 40px}
+  .chip .ring{width:26px;height:26px;border-radius:50%;border:4px solid rgba(255,255,255,.55)}
+
+  .badge{font-size:96px;font-weight:600;border:3px solid var(--hair);border-radius:999px;
+         padding:22px 54px;display:inline-block}
+
+  .meter{width:640px;height:10px;border-radius:10px;background:rgba(255,255,255,.1);overflow:hidden}
+  .meter i{display:block;height:100%;width:100%;background:rgba(255,255,255,.8);transform-origin:left}
+
+  .sw{width:190px;height:106px;border-radius:999px;background:rgba(255,255,255,.12);position:relative}
+  .sw .knob{position:absolute;top:12px;left:12px;width:82px;height:82px;border-radius:50%;background:#9e9e9e}
+
+  .plate{width:760px;height:470px;border-radius:28px;border:2px solid var(--hair);position:relative;
+         background:linear-gradient(135deg,#2b2f36,#15171b);overflow:hidden}
+  .plate .ring2{position:absolute;left:58%;top:46%;width:74px;height:74px;margin:-37px 0 0 -37px;
+                border-radius:50%;border:6px solid #fff;box-shadow:0 0 0 6px rgba(0,0,0,.5);opacity:0}
+
+  .panel{border:2px solid var(--hair);border-radius:30px;background:#0e0e0f;overflow:hidden;
+         display:flex;align-items:center;gap:26px;padding:0 34px;width:220px;height:110px}
+  .panel .t{font-size:30px;color:var(--on2);white-space:nowrap;opacity:0}
+
+  .pill{font-size:36px;font-weight:500;padding:26px 54px;border-radius:999px;
+        background:rgba(255,255,255,.92);color:#0a0a0b;position:relative}
+  .pill .lbl,.pill .tick{display:block}
+  .pill .tick{position:absolute;inset:0;display:grid;place-items:center;opacity:0}
+
+  .card{width:620px;border:2px solid var(--hair);border-radius:28px;background:#0e0e0f;
+        padding:34px 40px;display:flex;align-items:center;gap:26px}
+  .card .x{margin-left:auto;width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.08);
+           display:grid;place-items:center;font-size:24px;color:var(--on3)}
+
+  /* ── endcard ──────────────────────────────────────────────── */
+  #end{position:fixed;inset:0;display:grid;place-items:center;opacity:0}
+  #end .mark{font-size:96px;font-weight:600;letter-spacing:-.035em}
+  #end .sub{font-size:36px;color:var(--on2);margin-top:22px;text-align:center;line-height:1.35}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div class="cap" id="cap"></div>
+<div class="step" id="step"></div>
+<div class="bar"><i id="barfill"></i></div>
+<div id="end"><div style="text-align:center">
+  <div class="mark">Ambient</div>
+  <div class="sub">Say what's wrong.<br>Get a brief.</div>
+</div></div>
+
+<script src="vendor/gsap.min.js"></script>
+<script>
+/* ────────────────────────────────────────────────────────────────────
+   A cut is four shots drawn from ten, ordered so that neighbours differ
+   least, with the transition between any two READ FROM THEIR DIFFERENCE
+   rather than chosen. Same subject → scrub. Same surface → match.
+   Everything different → flip, because two shots sharing nothing should
+   cut rather than dissolve.
+   ──────────────────────────────────────────────────────────────────── */
+
+const SHOTS = {
+  chord: { surface:"keys",  scale:"mid",  cap:"Tap to start",
+    html:`<span class="keys"><span class="key">⌃</span><span class="key">fn</span></span>`,
+    build(tl, q){ tl.to(q(".key"), {y:10, backgroundColor:"rgba(255,255,255,.2)", duration:.14, ease:"power2.out"}, .5)
+                    .to(q(".key"), {y:0, backgroundColor:"rgba(255,255,255,.13)", duration:.18, ease:"power2.out"}, .68); } },
+
+  wave: { surface:"wave", scale:"mid", cap:"Just talk",
+    html:`<span class="wave"><i></i><i></i><i></i><i></i><i></i></span>`,
+    build(tl, q){ const b=q("i");
+      tl.to(b,{height:(i)=>[110,190,150,200,96][i], duration:.26, ease:"power2.out", stagger:.03}, .35)
+        .to(b,{height:(i)=>[54,96,70,104,46][i], duration:.22, ease:"power2.inOut"}, .9)
+        .to(b,{height:(i)=>[130,205,165,190,110][i], duration:.24, ease:"power2.out"}, 1.2); } },
+
+  chip: { surface:"chip", scale:"small", cap:"It knows what you meant",
+    html:`<span class="chip"><span class="ring"></span>link “Asset Supply©”</span>`,
+    build(tl, q){ tl.from(q(".chip"),{y:18, opacity:0, duration:.34, ease:"power3.out"}, .3)
+                    .to(q(".ring"),{scale:1.5, duration:.2, ease:"power2.out"}, .95)
+                    .to(q(".ring"),{scale:1, duration:.24, ease:"power2.out"}, 1.15); } },
+
+  count: { surface:"badge", scale:"small", cap:"Every pause is a note",
+    html:`<span class="badge">4</span>`,
+    build(tl, q, el){ const b=el.querySelector(".badge");
+      [5,6,7].forEach((n,i)=>{
+        tl.to(b,{scale:1.18, duration:.13, ease:"power2.out", onComplete:()=>b.textContent=n}, .4+i*.55)
+          .to(b,{scale:1, duration:.2, ease:"power2.out"}, .53+i*.55);
+      }); } },
+
+  meter: { surface:"meter", scale:"wide", cap:"100 free",
+    html:`<span class="meter"><i></i></span>`,
+    build(tl, q){ tl.to(q(".meter i"),{scaleX:.62, duration:.5, ease:"power2.inOut"}, .4)
+                    .to(q(".meter i"),{scaleX:.3, duration:.45, ease:"power2.inOut"}, 1.1); } },
+
+  toggle: { surface:"switch", scale:"small", cap:"Nothing leaves your machine",
+    html:`<span class="sw"><span class="knob"></span></span>`,
+    build(tl, q){ tl.to(q(".knob"),{width:104, duration:.1, ease:"power2.out"}, .5)
+                    .to(q(".knob"),{x:72, width:82, backgroundColor:"#141414", duration:.28, ease:"power3.out"}, .6)
+                    .to(q(".sw"),{backgroundColor:"rgba(255,255,255,.82)", duration:.28, ease:"power2.out"}, .6); } },
+
+  ring: { surface:"plate", scale:"large", cap:"Pointing at this",
+    html:`<span class="plate"><span class="ring2"></span></span>`,
+    build(tl, q){ tl.fromTo(q(".ring2"),{opacity:0, scale:2.8},
+                    {opacity:1, scale:1, duration:.42, ease:"power3.out"}, .55); } },
+
+  panel: { surface:"panel", scale:"wide", cap:"One object, three sizes",
+    html:`<span class="panel"><span class="wave" style="height:38px"><i style="height:16px"></i><i style="height:26px"></i><i style="height:18px"></i></span><span class="t">the spacing is too tight</span></span>`,
+    build(tl, q){ tl.to(q(".panel"),{width:700, height:150, duration:.42, ease:"power3.out"}, .45)
+                    .to(q(".panel .t"),{opacity:1, duration:.22, ease:"power1.out"}, .8); } },
+
+  action: { surface:"pill", scale:"mid", cap:"Copy the brief",
+    html:`<span class="pill"><span class="lbl">Copy brief</span><span class="tick">✓ Copied</span></span>`,
+    build(tl, q){ tl.to(q(".pill"),{scale:.95, duration:.12, ease:"power2.out"}, .6)
+                    .to(q(".pill"),{scale:1, duration:.2, ease:"power2.out"}, .72)
+                    .to(q(".lbl"),{opacity:0, duration:.14}, .8)
+                    .to(q(".tick"),{opacity:1, duration:.18}, .86); } },
+
+  dismiss: { surface:"card", scale:"wide", cap:"Drop what you don't want",
+    html:`<span class="card"><span style="font-size:30px;color:var(--on2)">3 notes</span><span class="x">✕</span></span>`,
+    build(tl, q){ tl.to(q(".x"),{scale:1.15, backgroundColor:"rgba(255,255,255,.16)", duration:.2, ease:"power2.out"}, .55)
+                    .to(q(".card"),{scale:.94, opacity:0, duration:.3, ease:"power2.in"}, .95); } }
+};
+
+/* transition read from the difference between two shots */
+function transitionBetween(a, b){
+  if (!a) return "open";
+  if (a.surface === b.surface) return "scrub";
+  if (a.scale === b.scale) return "match";
+  return "flip";
+}
+const DIFF = (a,b) => (a.surface===b.surface?0:2) + (a.scale===b.scale?0:1);
+
+/* order a chosen set so neighbours differ least — greedy, deterministic */
+function order(keys){
+  const left = keys.slice();
+  const out = [left.shift()];
+  while (left.length){
+    const last = SHOTS[out[out.length-1]];
+    left.sort((x,y)=> DIFF(last,SHOTS[x]) - DIFF(last,SHOTS[y]) || x.localeCompare(y));
+    out.push(left.shift());
+  }
+  return out;
+}
+
+/* the cuts — combinations, not a single edit */
+const CUTS = [
+  ["chord","wave","chip","action"],      // 0 · the loop
+  ["ring","chip","count","panel"],       // 1 · what it sees
+  ["meter","toggle","action","dismiss"], // 2 · what it costs
+  ["wave","panel","count","ring"],       // 3 · a pass, end to end
+  ["chord","ring","action","meter"]      // 4 · start to finish
+];
+
+const params = new URLSearchParams(location.search);
+const cutIndex = Math.max(0, Math.min(CUTS.length - 1, parseInt(params.get("cut") || "0", 10)));
+const keys = order(CUTS[cutIndex]);
+
+/* ── build the film ──────────────────────────────────────────── */
+const stage = document.getElementById("stage");
+const cap = document.getElementById("cap");
+const step = document.getElementById("step");
+const SHOT_T = 2.15;              // seconds on screen
+const HOLD  = 0.72;               // his cadence: hold before any move
+const EASE  = "power3.out";
+
+gsap.defaults({ ease: EASE });
+const tl = gsap.timeline({ paused: true });
+
+const nodes = keys.map(k => {
+  const d = document.createElement("div");
+  d.className = "shot";
+  d.innerHTML = `<div class="inner">${SHOTS[k].html}</div>`;
+  stage.appendChild(d);
+  return d;
+});
+
+keys.forEach((k, i) => {
+  const shot = SHOTS[k];
+  const el = nodes[i];
+  const q = gsap.utils.selector(el);
+  const at = i * SHOT_T;
+  const prev = i ? SHOTS[keys[i-1]] : null;
+  const kind = transitionBetween(prev, shot);
+
+  // in
+  if (kind === "flip") {
+    tl.set(el, { opacity: 1, scale: 1, y: 0 }, at);
+    if (i) tl.set(nodes[i-1], { opacity: 0 }, at);
+  } else if (kind === "match") {
+    tl.fromTo(el, { opacity: 0, scale: .92 }, { opacity: 1, scale: 1, duration: .46 }, at);
+    if (i) tl.to(nodes[i-1], { opacity: 0, scale: 1.06, duration: .38 }, at);
+  } else if (kind === "scrub") {
+    tl.fromTo(el, { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: .5 }, at);
+    if (i) tl.to(nodes[i-1], { opacity: 0, y: -26, duration: .42 }, at);
+  } else {
+    tl.fromTo(el, { opacity: 0, scale: .96 }, { opacity: 1, scale: 1, duration: .6 }, at + .15);
+  }
+
+  // the shot's own motion, after the hold
+  const inner = gsap.timeline();
+  shot.build(inner, q, el);
+  tl.add(inner, at + HOLD);
+
+  // caption
+  tl.set(cap, { textContent: shot.cap }, at + .1);
+  tl.fromTo(cap, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: .4 }, at + .18);
+  tl.to(cap, { opacity: 0, duration: .28 }, at + SHOT_T - .34);
+  tl.set(step, { textContent: `${i + 1} / ${keys.length}` }, at + .1);
+  tl.fromTo(step, { opacity: 0 }, { opacity: 1, duration: .4 }, at + .18);
+  tl.to(step, { opacity: 0, duration: .28 }, at + SHOT_T - .34);
+});
+
+const endAt = keys.length * SHOT_T;
+tl.to(nodes[nodes.length - 1], { opacity: 0, scale: 1.04, duration: .4 }, endAt - .1);
+tl.fromTo("#end", { opacity: 0, scale: .97 }, { opacity: 1, scale: 1, duration: .6 }, endAt);
+tl.fromTo("#barfill", { scaleX: 0 }, { scaleX: 1, duration: 10, ease: "none" }, 0);
+tl.set({}, {}, 10);               // pin the timeline to exactly ten seconds
+
+/* ── the rig owns the clock ──────────────────────────────────── */
+window.__render = {
+  ready: true,
+  cut: cutIndex,
+  beats: keys.map((k, i) => ({ at: i * SHOT_T + HOLD, shot: k })),
+  seek(p) { tl.progress(Math.max(0, Math.min(1, p))); }
+};
+tl.progress(0);
+</script>
+</body>
+</html>
