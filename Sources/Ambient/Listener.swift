@@ -57,6 +57,7 @@ final class Listener {
     private var rebuilding = false
     private var engaged = false
     private var engagedAt = Date()
+    private var chordAt = Date()   // for latency only, never for word timing
     /// Audio time only advances while engaged, so it cannot be compared to wall
     /// clock directly — each turn is anchored to the stream position at engage.
     private var engageStreamTime: Double = 0
@@ -66,6 +67,7 @@ final class Listener {
     /// grant with silence rather than an error, so audio can flow all the way
     /// to the analyzer as pure zeroes and every pass comes back empty.
     private var peak: Double = 0
+    private var firstResultLogged = false
     private var volatileText = ""
 
     // MARK: - Setup
@@ -115,6 +117,52 @@ final class Listener {
         }
     }
 
+    /// A fresh transcriber and analyzer, reusing everything expensive.
+    ///
+    /// `finalize(through:)` leaves the analyzer degraded: it keeps emitting
+    /// volatile results, so the pass still produces text and everything looks
+    /// fine, but final results — the only ones carrying word timestamps — dry
+    /// up. Measured over real use: 11% of passes came back with no final words
+    /// on a fresh analyzer, 35% on a reused one. Without stamped words the
+    /// cursor cannot be placed in time, so the note loses both its timing and
+    /// its picture.
+    ///
+    /// So the speech side is rebuilt after every pass. The locale checks and
+    /// the audio engine are untouched, which is what keeps this off the clock:
+    /// it runs while the notes panel is up, not while anyone is waiting.
+    private func renewAnalyzer() async {
+        guard !engaged, !rebuilding, analyzerFormat != nil else { return }
+        let began = Date()
+        generation += 1
+        let gen = generation
+
+        feed?.finish()
+        feed = nil
+        analyzer = nil
+
+        let t = SpeechTranscriber(locale: Locale(identifier: "en-US"),
+                                  transcriptionOptions: [],
+                                  reportingOptions: [.volatileResults],
+                                  attributeOptions: [.audioTimeRange])
+        transcriber = t
+
+        let (stream, cont) = AsyncStream<AnalyzerInput>.makeStream()
+        feed = cont
+        let a = SpeechAnalyzer(modules: [t])
+        analyzer = a
+        tap.resetClock()              // new analyzer, new audio timeline
+        Task { try? await a.start(inputSequence: stream) }
+        consume(t, gen)
+
+        // Re-point the tap at the new continuation. Forgetting this once meant
+        // audio was captured and fed nowhere.
+        let sink = feed
+        tap.onBuffer = { buf in sink?.yield(AnalyzerInput(buffer: buf)) }
+
+        if case .failed = state {} else { state = .ready }
+        Log.say("listener · analyzer renewed in \(Int(Date().timeIntervalSince(began) * 1000))ms")
+    }
+
     private func consume(_ t: SpeechTranscriber, _ gen: Int) {
         Task { [weak self] in
             var reason = "results stream closed"
@@ -145,7 +193,7 @@ final class Listener {
         rebuilding = true
         engaged = false
         tap.setFeeding(false)
-        closeMicrophone()
+        discardEngine()
         analyzer = nil
         transcriber = nil
         feed?.finish()
@@ -180,13 +228,18 @@ final class Listener {
             return
         }
         engaged = true
+        chordAt = Date()
         openMicrophone()
-        tap.setFeeding(true)
+        // These two must name the same instant: word offsets are measured from
+        // engageStreamTime and added to engagedAt, so any gap between them is a
+        // straight skew in what the pointer was on. Read both before audio flows.
         engagedAt = Date()
         engageStreamTime = tap.fedSeconds
+        tap.setFeeding(true)
         finalWords = []
         sawFinal = false
         peak = 0
+        firstResultLogged = false
         volatileText = ""
         state = .hearing
         Log.say("engage · streamTime=\(String(format: "%.2f", tap.fedSeconds))")
@@ -233,16 +286,28 @@ final class Listener {
         // to end — the previous build returned here and left the panel reading
         // forever.
         delegate?.listener(finished: Utterance(words: words, text: text))
+
+        // The analyzer has been finalised and will not reliably produce final
+        // results again. Replace it now, while nobody is waiting.
+        await renewAnalyzer()
     }
 
     // MARK: - Results
 
+    private func noteFirstResult() {
+        guard !firstResultLogged, engaged else { return }
+        firstResultLogged = true
+        Log.say("latency · first words \(Int(Date().timeIntervalSince(chordAt) * 1000))ms after the chord")
+    }
+
     private func absorbVolatile(_ s: AttributedString) {
+        noteFirstResult()
         volatileText = String(s.characters)
         delegate?.listener(volatile: volatileText)
     }
 
     private func absorbFinal(_ s: AttributedString) {
+        noteFirstResult()
         sawFinal = true
         let before = finalWords.count
         for run in s.runs {
@@ -308,31 +373,51 @@ final class Listener {
         Log.say("audio · wired (device opens only while recording)")
     }
 
+    /// The engine is built once and reused.
+    ///
+    /// Allocating, configuring, tapping and preparing a fresh AVAudioEngine on
+    /// every pass costs a few hundred milliseconds, and those milliseconds are
+    /// the first word. `stop()` still releases the input device, so the
+    /// recording indicator behaves exactly as before.
     private func openMicrophone() {
-        guard engine == nil, let outFormat = analyzerFormat else { return }
-        let e = AVAudioEngine()
-        let input = e.inputNode
-        let inFormat = input.outputFormat(forBus: 0)
-        guard inFormat.sampleRate > 0 else { Log.say("audio · input unavailable"); return }
-        tap.configure(from: inFormat, to: outFormat)
-        input.installTap(onBus: 0, bufferSize: 4096, format: inFormat) { [tap] buf, _ in
-            tap.receive(buf)
+        guard let outFormat = analyzerFormat else { return }
+        let began = Date()
+
+        if engine == nil {
+            let e = AVAudioEngine()
+            let input = e.inputNode
+            let inFormat = input.outputFormat(forBus: 0)
+            guard inFormat.sampleRate > 0 else { Log.say("audio · input unavailable"); return }
+            tap.configure(from: inFormat, to: outFormat)
+            input.installTap(onBus: 0, bufferSize: 4096, format: inFormat) { [tap] buf, _ in
+                tap.receive(buf)
+            }
+            e.prepare()
+            engine = e
+            Log.say("audio · engine built \(Int(inFormat.sampleRate))→\(Int(outFormat.sampleRate))")
         }
-        e.prepare()
+
+        guard let e = engine, !e.isRunning else { return }
         do { try e.start() } catch {
-            Log.say("audio · could not start — \(error.localizedDescription)"); return
+            Log.say("audio · could not start — \(self.short(error))")
+            engine = nil        // rebuild it next time rather than stay wedged
+            return
         }
-        engine = e
-        Log.say("audio · open \(Int(inFormat.sampleRate))→\(Int(outFormat.sampleRate))")
+        Log.say("audio · open in \(Int(Date().timeIntervalSince(began) * 1000))ms")
     }
 
     private func closeMicrophone() {
-        guard let e = engine else { return }
-        e.stop()
-        e.inputNode.removeTap(onBus: 0)
-        engine = nil
+        guard let e = engine, e.isRunning else { return }
+        e.stop()                // releases the device; the tap stays installed
         delegate?.listener(level: 0)
         Log.say("audio · closed")
+    }
+
+    /// Only on teardown does the engine itself go.
+    private func discardEngine() {
+        engine?.stop()
+        engine?.inputNode.removeTap(onBus: 0)
+        engine = nil
     }
 
     // MARK: - Test injection

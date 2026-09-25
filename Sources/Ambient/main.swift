@@ -843,16 +843,32 @@ if args.contains("--selftest") {
     _ = NSApplication.shared
     MainActor.assumeIsolated {
         Pointer.shared.start()
+        Recorder.shared.start()     // without frames in the ring no note can have a picture
         let s = Session.shared
         var seen: [String] = []
+        let unstamped = args.contains("--unstamped")
+        let expectShot = unstamped || !args.contains("--empty")
         Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { t in
             MainActor.assumeIsolated {
                 let now = "\(s.phase)"
                 if seen.last != now { seen.append(now); print("  → \(now)") }
                 switch s.phase {
-                case .reported, .replying, .failed:
+                case .noted, .reported, .replying, .failed:
                     t.invalidate()
                     print("  says: “\(s.spoken)”")
+                    if let n = Notes.shared.items.last {
+                        print("  note: \(n.shots.count) picture(s) · \(n.app)")
+                        let missing = expectShot && n.shots.isEmpty
+                        // A test must not leave its rubbish in the real store.
+                        for f in n.shots { try? FileManager.default.removeItem(atPath: f) }
+                        Notes.shared.remove(n.id)
+                        if missing {
+                            print("FAIL · the note came out with no picture")
+                            exit(1)
+                        }
+                    } else if expectShot {
+                        print("FAIL · no note was written"); exit(1)
+                    }
                     print(s.awaitingConfirmation ? "RESOLVED (awaiting answer)" : "RESOLVED")
                     exit(0)
                 default: break
@@ -865,11 +881,16 @@ if args.contains("--selftest") {
         let custom = Array(args.drop(while: { $0 != "--selftest" }).dropFirst())
             .first(where: { !$0.hasPrefix("--") })
         let spoken = args.contains("--empty") ? "" : (custom ?? "open this folder")
-        print("selftest · “\(spoken)”")
-        let u = Utterance(words: spoken.isEmpty ? [] :
+        print("selftest · “\(spoken)”\(unstamped ? " (no word stamps)" : "")")
+        let u = Utterance(words: (spoken.isEmpty || unstamped) ? [] :
                           spoken.split(separator: " ").map { StampedWord(text: String($0), t: Date()) },
                           text: spoken)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { MainActor.assumeIsolated { s.heard(u) } }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            MainActor.assumeIsolated {
+                print("  ring: \(Recorder.shared.frameCount) frame(s)")
+                s.heard(u)
+            }
+        }
     }
     NSApplication.shared.run()
 }
@@ -898,17 +919,30 @@ if args.contains("--loopback") {
             try? say.run(); say.waitUntilExit()
 
             await l.prepare()
-            l.engage()
-            try? await Task.sleep(nanoseconds: 300_000_000)
 
-            let play = Process()
-            play.executableURL = URL(fileURLWithPath: "/usr/bin/afplay")
-            play.arguments = [file]
-            try? play.run()
-            play.waitUntilExit()
+            // Twice, in one process. The second pass is the one that matters:
+            // it shows what a pass costs once the engine already exists, which
+            // is every pass after the app has been launched.
+            let passes = Int(Array(args.drop(while: { $0 != "--loopback" }).dropFirst())
+            .first(where: { Int($0) != nil }) ?? "") ?? (args.contains("--twice") ? 2 : 1)
+            for pass in 1...passes {
+                let began = Date()
+                l.engage()
+                let openedIn = Date().timeIntervalSince(began)
+                try? await Task.sleep(nanoseconds: 300_000_000)
 
-            try? await Task.sleep(nanoseconds: 600_000_000)
-            await l.release()
+                let play = Process()
+                play.executableURL = URL(fileURLWithPath: "/usr/bin/afplay")
+                play.arguments = [file]
+                try? play.run()
+                play.waitUntilExit()
+
+                try? await Task.sleep(nanoseconds: 600_000_000)
+                await l.release()
+                if passes > 1 {
+                    print("pass \(pass) · engage took \(Int(openedIn * 1000))ms")
+                }
+            }
             print("mic level peak · \(String(format: "%.3f", sink.peak))")
             print("heard          · “\(sink.text)”")
             if sink.text.isEmpty {

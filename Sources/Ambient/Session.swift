@@ -197,6 +197,12 @@ final class Session: ObservableObject {
         if moments.isEmpty, let mid = u.words.dropFirst(u.words.count / 2).first?.t {
             moments = [mid]                 // no pointing word: the middle of the sentence
         }
+        if moments.isEmpty {
+            // No stamped words at all — the transcript came through the volatile
+            // path. The ring is still full of perfectly good frames, and every
+            // one of these notes used to end up with no picture.
+            moments = [Date()]
+        }
 
         var shots: [String] = []
         for (i, moment) in moments.prefix(3).enumerated() {
